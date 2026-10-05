@@ -8,7 +8,7 @@ Sistema en LangGraph que recibe un diff de un repositorio y devuelve un informe 
 - `revisor/`: el sistema. Configuración del modelo, estado, herramientas, RAG y traza.
 - `evaluacion/`: la Parte 0, el golden set, el evaluador, el modelo de guion y los frenos forzados.
 - `resultados/`: CSV crudos y trazas de todas las corridas medidas.
-- `informe/`: el generador del informe y el PDF.
+- `informe/`: el informe del taller en PDF.
 - `tests/`: pruebas del sistema; no llaman a ningún modelo.
 
 ## Preparación
@@ -76,11 +76,7 @@ Fuerza los cuatro frenos con un modelo de guion, sin gastar: tope de pasos, pres
 
 ## Informe
 
-```bash
-.venv/bin/python informe/generar_informe.py
-```
-
-Lee `resultados/` y escribe `informe/informe.html` e `informe/informe.pdf`. Ninguna cifra del informe está escrita a mano.
+El informe del taller está en `informe/informe.pdf`. Todas sus cifras salen de los archivos de `resultados/`.
 
 ## Pruebas
 
