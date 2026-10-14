@@ -1,0 +1,14 @@
+# Lab 04 — lo que corren evaluar_llmops.py, probar_guardrails.py, resumir_trazas.py y guion.py.
+# El agente que se evalúa es el del Taller 3: sus dependencias, con sus versiones fijadas.
+-r ../Lab-03-Agentes/requirements.txt
+
+# Observabilidad: OBLIGATORIO desde el 2026-10-06 (Parte 1 del Taller 4). Lo importa
+# exportar_trazas.py. Pide Python >= 3.10; convive con las versiones del Lab 03.
+langfuse==4.17.0
+
+# Opcionales. Ninguno lo importa el laboratorio; si usas uno, fija su versión en tu
+# requirements.txt y declárala en el informe (fuentes/web/fuentes-web.md, «Consultadas el
+# 2026-10-02», tiene la documentación de cada uno con su fecha):
+# langsmith                               — además de Langfuse, no en su lugar; la sesión 14 usa 0.14.2
+# ragas                                   — solo si tu agente recupera texto
+# presidio-analyzer presidio-anonymizer   — NER para nombres; necesita además un modelo de spaCy

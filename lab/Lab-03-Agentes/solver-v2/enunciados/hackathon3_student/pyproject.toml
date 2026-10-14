@@ -1,0 +1,15 @@
+[project]
+name = "hackathon3-and-guiado"
+version = "1.0.0"
+description = "Entrenamiento guiado de una neurona AND con motor escalar proporcionado"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "ipykernel>=6.29,<7",
+  "jupyterlab>=4.2,<5",
+  "matplotlib>=3.9,<4",
+  "nbclient>=0.10,<1",
+  "nbformat>=5.10,<6",
+]
+
+[tool.uv]
+package = false

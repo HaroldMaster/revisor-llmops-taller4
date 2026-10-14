@@ -7,3 +7,6 @@ numpy==2.5.3
 pydantic==2.13.5
 python-dotenv==1.2.4
 pytest==9.1.1
+# Taller 4: observabilidad y el juez del laboratorio (lab/Lab-04-LLMOps)
+langfuse==4.17.0
+openai==3.29.0

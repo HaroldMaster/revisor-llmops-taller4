@@ -1,0 +1,8 @@
+.env
+.langfuse/
+__pycache__/
+spans*.jsonl
+.venv/
+pip.log
+corrida.log
+verificar.log

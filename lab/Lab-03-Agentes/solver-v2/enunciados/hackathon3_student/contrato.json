@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "inicio",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "d66c3949b8daaddb1fa94d0a86eae98c8d6a03b59d1d2f9d5ae032122d42e77f"
+    },
+    {
+      "id": "integrantes",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "identidad"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "uso",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "c55fa453176f4425a30f4613944ed9eb257b2c781f2e1893ada0e95ef2382652"
+    },
+    {
+      "id": "setup",
+      "type": "code",
+      "tags": [],
+      "sha256": "42ab9a1a0f5f742d289ad28107a1bdb86491d87313b6f6009d12c9569b1be88b"
+    },
+    {
+      "id": "etapa0",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "79cd913852bc5e04a7b1e80ea009f7134038ceedc82100fbec9f8941c7bda5d5"
+    },
+    {
+      "id": "r01",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "etapa1",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "cfdb44f95bea7df48b066d3b3c2e7db760533be45f4caf078419723adc295a83"
+    },
+    {
+      "id": "demo-forward",
+      "type": "code",
+      "tags": [],
+      "sha256": "a4937eed7c967d181e04d1fdf7f4a30ef6d5891156362b19fc2fa16502156e27"
+    },
+    {
+      "id": "demo-backward-info",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "447f98cc34bcb16be121199f63b0139d10cc5962b7f94af602ff8cd8c09e0e7d"
+    },
+    {
+      "id": "demo-backward",
+      "type": "code",
+      "tags": [],
+      "sha256": "d73bdf9c52f3133bc3d808dc0ffcea2d23afb74307883a23f28b1189c6301e16"
+    },
+    {
+      "id": "grafo-info",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "4681286446b85b0a82dfd2a23a2ada72c68240a0ba5cc7992c6e89a479d30ae6"
+    },
+    {
+      "id": "grafo",
+      "type": "code",
+      "tags": [],
+      "sha256": "9a7baeb7aa01c1026b79375a6560fcea48d7fde964fbbc60649d8030bacd67ec"
+    },
+    {
+      "id": "demo-step-info",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "2e9f763334da11ab77549ab65058cd961c21b6ba782f90b77d2fac1f50d7d54f"
+    },
+    {
+      "id": "demo-step",
+      "type": "code",
+      "tags": [],
+      "sha256": "7928bf1c124ccb2c3da8e786a1858a10fb8d91ff35393fe372cb906155e71f1b"
+    },
+    {
+      "id": "demo-cierre",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "1fc27118d0d7de243429683dc62eb856bdcdd0b63daeb781c7511897e6da10c8"
+    },
+    {
+      "id": "etapa2",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "09a77a002c3c089361e942ca63be3568a6d33bd06fddbddfb90345595c4758e5"
+    },
+    {
+      "id": "r02",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "forward-ayuda",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "cba55350c3e882d2677403e20c0bc24098a502b61c77606cc19f14dc302d2b95"
+    },
+    {
+      "id": "func-forward",
+      "type": "code",
+      "tags": [
+        "editable",
+        "codigo"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "check-forward",
+      "type": "code",
+      "tags": [],
+      "sha256": "89a920c41f7bcd1628c62e6e7f4eb0819e06e8259377f1142731f16b8e4decd7"
+    },
+    {
+      "id": "practica-info",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "e936e4d9010ebed17e44a6e439350525a4df68dd0f13081318aad499c121ec3d"
+    },
+    {
+      "id": "practica",
+      "type": "code",
+      "tags": [],
+      "sha256": "6303e78dbb8f9b2efc604ba963dc2def6c866621aa817e23ae01f4d9329ed742"
+    },
+    {
+      "id": "r03",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "etapa3",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "3256ac1cb2a6db51b9df197e7a19300af0f70b191fa73a39f5679ca06eeaaffa"
+    },
+    {
+      "id": "r04",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "actualizacion-ayuda",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "6e88b558156ca4c9216dc21f04378c8d4bce36176a8f6368553e2d90cc288c5a"
+    },
+    {
+      "id": "func-actualizar",
+      "type": "code",
+      "tags": [
+        "editable",
+        "codigo"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "check-actualizar",
+      "type": "code",
+      "tags": [],
+      "sha256": "38957af4bcb8a8218dabf7eeb980a9f088b739458aab650a1961f21ba3dea068"
+    },
+    {
+      "id": "practica-step",
+      "type": "code",
+      "tags": [],
+      "sha256": "a7c496ef4c98c14746a7cc2d25343347ef87665001ec2c97678b26c935eb0997"
+    },
+    {
+      "id": "r05",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "etapa4",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "606fd2d73d67bc0bbaf6f21ee3376174c7f45cdda917cce3f9f0fb4b3c0e0cf0"
+    },
+    {
+      "id": "r06",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "ciclo-ayuda",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "b45bbba244a356ce78b8a550b366f9d8c6782dee695db37d10586f07196e713b"
+    },
+    {
+      "id": "func-paso",
+      "type": "code",
+      "tags": [
+        "editable",
+        "codigo"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "check-paso",
+      "type": "code",
+      "tags": [],
+      "sha256": "4ecd2a4bf0ba155b55e3b3c2ff3440e73c9c19d15d70383d955221bc52ef26a3"
+    },
+    {
+      "id": "entrenamiento-info",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "e0451506a7489ce10286afb3fa5cf004f7b1f159ec81d86d48d38e366bbf37e8"
+    },
+    {
+      "id": "entrenamiento",
+      "type": "code",
+      "tags": [],
+      "sha256": "fd69a0cbf01ba1f65d68ab028330563611a9383844a8cc2cf2deba68fe88dab1"
+    },
+    {
+      "id": "r07",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "etapa5",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "d86671f607a289ab9558eff4410899fc2afdfe0392972a3d2d89dba398086a7f"
+    },
+    {
+      "id": "evaluacion",
+      "type": "code",
+      "tags": [],
+      "sha256": "511ea4958998f1b3b6ca64dc35a42fb5935ceec98c7db2663ab627e834855267"
+    },
+    {
+      "id": "limites",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "ecaf1ddb97516b95dafe3791d94c3830119d5fe1825e9b09ad37c6d5a24a68ad"
+    },
+    {
+      "id": "r08",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "individual-info",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "1b9ac7d0a37a8649cd405d0ad02f1373ba01e315336c04b9cc7623f753219729"
+    },
+    {
+      "id": "individual-a",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "individual-b",
+      "type": "markdown",
+      "tags": [
+        "editable",
+        "respuesta"
+      ],
+      "sha256": null
+    },
+    {
+      "id": "etapa6",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "b2072bc8be1668c06f633d7f64134465f123edb54bb541cb01c3c0cc09ff4b11"
+    },
+    {
+      "id": "final-check",
+      "type": "code",
+      "tags": [],
+      "sha256": "ff1308e147556539085724d97169bc6cc02a249ecf609e346613c3f7d2d40f85"
+    },
+    {
+      "id": "entrega",
+      "type": "markdown",
+      "tags": [],
+      "sha256": "eaa5dcea472aaa8e49bb9b276ac632245e2ad306f04bd95cbad18353a0622f24"
+    }
+  ],
+  "protected_files": {
+    "and_lab.py": "0f5ceb98c0bdad9c06982a8fa9ae948aa49c8e0514dbc07302a321295f98466d"
+  }
+}
