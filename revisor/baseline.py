@@ -69,6 +69,7 @@ class RevisorBase:
         modelo = self._modelo_de("default")
         traza.evento("inicio", sistema=self.nombre, parche=parche.name, modelo=modelo)
         estado: dict = {}
+        contexto: Contexto | None = None
         status, error = "failed", None
         try:
             with repo_con_parches(parche, origen=self._repo) as repo:
@@ -96,6 +97,7 @@ class RevisorBase:
             "status": status,
             "model": modelo,
             "usage": traza.uso(),
+            "contextos": contexto.contextos if contexto else [],
         }
 
 

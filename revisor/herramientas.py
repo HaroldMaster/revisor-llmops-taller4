@@ -42,6 +42,7 @@ def crear_herramientas(
     traza: Traza | None = None,
     agente: str = "agente",
     citas_devueltas: set[str] | None = None,
+    contextos: list[dict] | None = None,
 ) -> dict:
     """Devuelve las herramientas por nombre. `citas_devueltas` acumula los ids
     que buscar_reglas entregó en esta corrida: es lo que permite comprobar en
@@ -161,6 +162,10 @@ def crear_herramientas(
         resultados = indice.buscar(pregunta, K_FRAGMENTOS)
         if citas_devueltas is not None:
             citas_devueltas.update(f.id for f, _ in resultados)
+        if contextos is not None:
+            contextos.extend(
+                {"id": f.id, "fuente": f.fuente, "texto": f.texto[:MAX_TEXTO_FRAGMENTO]} for f, _ in resultados
+            )
         return json.dumps(
             [
                 {

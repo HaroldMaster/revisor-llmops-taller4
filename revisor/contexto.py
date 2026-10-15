@@ -22,4 +22,6 @@ class Contexto:
     # Modelo para reintentar tras una respuesta vacía; si falta, se reintenta con el mismo.
     llm_reintento_de: Callable[[str], object] | None = None
     citas_devueltas: set[str] = field(default_factory=set)
+    # Fragmentos que buscar_reglas entregó, completos y en orden: los contextos de RAGAS.
+    contextos: list[dict] = field(default_factory=list)
     max_pasos: int = MAX_PASOS
