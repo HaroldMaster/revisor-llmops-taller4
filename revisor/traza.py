@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .frenos import PresupuestoAgotado
+from .guardrails import redactar_pii
 
 
 MAX_EXTRACTO = 700  # caracteres que se guardan de cada respuesta y de cada observación
@@ -41,10 +42,12 @@ class Traza:
 
     def _escribir(self, evento: dict) -> None:
         evento = {"t_ms": round((time.perf_counter() - self._inicio) * 1000), **evento}
+        # Lo que queda en disco va sin datos personales: el parche y el código revisado pueden traerlos.
+        linea = redactar_pii(json.dumps(evento, ensure_ascii=False))
         with self._candado:
             self.eventos.append(evento)
             with self.ruta.open("a", encoding="utf-8") as archivo:
-                archivo.write(json.dumps(evento, ensure_ascii=False) + "\n")
+                archivo.write(linea + "\n")
 
     def llamada(
         self,

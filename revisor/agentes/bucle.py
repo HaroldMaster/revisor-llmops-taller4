@@ -41,7 +41,7 @@ def ejecutar_agente(
     max_pasos = max_pasos or contexto.max_pasos
     todas = crear_herramientas(
         contexto.perfil, contexto.indice, contexto.traza, nombre, contexto.citas_devueltas,
-        contexto.contextos,
+        contexto.contextos, contexto.guarda_checks,
     )
     herramientas = {n: todas[n] for n in nombres_herramientas}
     llm = contexto.llm_de(rol).bind_tools(list(herramientas.values()))

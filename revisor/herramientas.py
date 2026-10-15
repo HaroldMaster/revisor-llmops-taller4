@@ -19,6 +19,7 @@ from typing import Literal
 
 from langchain_core.tools import tool
 
+from .guardrails import GuardaChecks
 from .perfil import Perfil
 from .rag.indice import Indice
 from .traza import Traza
@@ -43,6 +44,7 @@ def crear_herramientas(
     agente: str = "agente",
     citas_devueltas: set[str] | None = None,
     contextos: list[dict] | None = None,
+    guarda_checks: GuardaChecks | None = None,
 ) -> dict:
     """Devuelve las herramientas por nombre. `citas_devueltas` acumula los ids
     que buscar_reglas entregó en esta corrida: es lo que permite comprobar en
@@ -191,6 +193,14 @@ def crear_herramientas(
         Args:
             tipo: "lint", "tests" o "tipos".
         """
+        if guarda_checks is not None:
+            inicio = time.perf_counter()
+            decision, motivo = guarda_checks.decidir()
+            if traza is not None:
+                traza.evento("guardrail", nombre="correr_checks", agente=agente, decision=decision, motivo=motivo,
+                             latencia_ms=round((time.perf_counter() - inicio) * 1000, 3))
+            if decision == "bloquear":
+                return _error(f"Bloqueado por el guardrail de correr_checks: {motivo}")
         comando = perfil.checks.get(tipo)
         if comando is None:
             return _error(f"El perfil no define el check {tipo}")

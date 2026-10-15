@@ -7,6 +7,7 @@ from typing import Callable
 
 from .config import get_llm, id_modelo
 from .frenos import MAX_PASOS
+from .guardrails import GuardaChecks
 from .perfil import Perfil
 from .rag.indice import Indice
 from .traza import Traza
@@ -25,3 +26,5 @@ class Contexto:
     # Fragmentos que buscar_reglas entregó, completos y en orden: los contextos de RAGAS.
     contextos: list[dict] = field(default_factory=list)
     max_pasos: int = MAX_PASOS
+    # Guardrail de correr_checks: decide con el diff de la corrida y lleva la cuenta del tope.
+    guarda_checks: GuardaChecks | None = None

@@ -6,20 +6,26 @@ este adaptador la resuelve, corre el sistema y devuelve:
 
     answer     una línea por hallazgo, corta: el evaluador califica sus 600 primeros caracteres
     informe    el informe completo del sintetizador
-    status     ok | abstencion | aclaracion | incompleto | error
+    status     ok | abstencion | aclaracion | bloqueado | incompleto | error
     model      el id del modelo, leído del endpoint
     usage      tokens de entrada y salida, sumados sobre todos los agentes
     trace      un paso por acción: {"agente", "tool", "observation"}
     contextos  los fragmentos que devolvió buscar_reglas, completos
+    guardrail  {"entrada": "ok|redactada|bloqueada", "salida": "ok|redactada|bloqueada"}
+
+La pregunta pasa por validar_entrada antes de buscar el parche, y la respuesta y el informe
+por validar_salida antes de devolverse. Cada decisión es además un paso de la traza.
 """
 
 from __future__ import annotations
 
 import json
 import re
+import time
 from pathlib import Path
 
 from .config import RAIZ
+from .guardrails import redactar_pii, validar_entrada, validar_salida
 from .multiagente import RevisorMultiagente
 
 ABSTENCION = "No puedo responder con los datos disponibles."
@@ -83,9 +89,25 @@ def pasos_de(ruta_traza: str | Path) -> list[dict]:
         elif e["tipo"] == "herramienta":
             pasos.append({"agente": e["agente"], "tool": e["nombre"], "argumentos": e["argumentos"],
                           "observation": {"error": e["error"]} if e.get("error") else e.get("resultado")})
+        elif e["tipo"] == "guardrail":
+            pasos.append({"agente": e.get("agente"), "tool": None, "observation": {
+                "guardrail": e["nombre"], "decision": e["decision"], "motivo": e["motivo"],
+                "latencia_ms": e["latencia_ms"]}})
         elif e["tipo"] == "freno":
             pasos.append({"agente": e.get("agente"), "tool": None, "observation": {"freno": e["freno"]}})
     return pasos
+
+
+def aplicar_guardrail(validador, canal: str, texto: str) -> tuple[bool, str, str, dict]:
+    """Corre un validador y devuelve (ok, texto, decisión para el evaluador, paso de la traza)."""
+    inicio = time.perf_counter()
+    ok, resultado = validador(texto)
+    decision = "bloqueada" if not ok else ("redactada" if resultado != texto else "ok")
+    # agente=None: el paso existe, pero el evaluador no lo cuenta como un agente más.
+    paso = {"agente": None, "tool": None, "observation": {
+        "guardrail": canal, "decision": decision, "motivo": None if ok else resultado,
+        "latencia_ms": round((time.perf_counter() - inicio) * 1000, 3)}}
+    return ok, resultado, decision, paso
 
 
 def contextos_de(fragmentos: list[dict], respuesta: str, limite: int = MAX_CONTEXTOS) -> list[str]:
@@ -107,31 +129,43 @@ class Sistema:
     def __init__(self, revisor=None, **opciones):
         self._revisor = revisor or RevisorMultiagente(**opciones)
 
-    def _sin_revision(self, answer: str, status: str) -> dict:
+    def _sin_revision(self, answer: str, status: str, entrada: str, paso: dict) -> dict:
         return {"answer": answer, "informe": None, "status": status,
                 "model": self._revisor._modelo_de("default"),
-                "usage": {"tokens_entrada": 0, "tokens_salida": 0}, "trace": [], "contextos": []}
+                "usage": {"tokens_entrada": 0, "tokens_salida": 0}, "trace": [paso], "contextos": [],
+                "guardrail": {"entrada": entrada, "salida": "ok"}}
 
     def run(self, pregunta: str) -> dict:
+        ok, pregunta, entrada, paso_entrada = aplicar_guardrail(validar_entrada, "entrada", pregunta)
+        if not ok:
+            return self._sin_revision(f"{ABSTENCION} {pregunta}", "bloqueado", entrada, paso_entrada)
         parches = parches_de(pregunta)
         if not parches:
-            return self._sin_revision(ABSTENCION, "abstencion")
+            return self._sin_revision(ABSTENCION, "abstencion", entrada, paso_entrada)
         if len(parches) > 1:
             nombres = ", ".join(str(p.relative_to(CARPETA_PARCHES)) for p in parches)
-            return self._sin_revision(f"Nombraste más de un parche ({nombres}): ¿cuál reviso?", "aclaracion")
+            return self._sin_revision(
+                f"Nombraste más de un parche ({nombres}): ¿cuál reviso?", "aclaracion", entrada, paso_entrada
+            )
         r = self._revisor.run(str(parches[0]))
         status = _STATUS.get(r["status"], r["status"])
         if status == "error":
             answer = r["answer"][:MAX_RESPUESTA]
         else:
             answer = respuesta_corta(r.get("hallazgos", []), status)
+        ok_respuesta, answer, salida, paso_salida = aplicar_guardrail(validar_salida, "salida", answer)
+        ok_informe, informe, _, _ = aplicar_guardrail(validar_salida, "salida", r["answer"])
+        if not ok_informe and ok_respuesta:
+            salida = "bloqueada"
         return {
             "answer": answer,
-            "informe": r["answer"],
-            "hallazgos": r.get("hallazgos", []),
+            "informe": informe,
+            "hallazgos": json.loads(redactar_pii(json.dumps(r.get("hallazgos", []), ensure_ascii=False)))
+            if ok_respuesta and ok_informe else [],
             "status": status,
             "model": r["model"],
             "usage": r["usage"],
-            "trace": pasos_de(r["trace"]),
-            "contextos": contextos_de(r.get("contextos", []), answer),
+            "trace": [paso_entrada, *pasos_de(r["trace"]), paso_salida],
+            "contextos": contextos_de(r.get("contextos", []), answer) if ok_respuesta else [],
+            "guardrail": {"entrada": entrada, "salida": salida},
         }

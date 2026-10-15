@@ -38,7 +38,8 @@ def test_sin_parche_se_abstiene_sin_llamar_al_modelo(embeddings, tmp_path):
     r = sistema(modelo, embeddings, tmp_path).run("¿Cuánto vendió la tienda en marzo?")
     assert r["answer"] == ABSTENCION
     assert r["status"] == "abstencion"
-    assert r["trace"] == [] and r["usage"] == {"tokens_entrada": 0, "tokens_salida": 0}
+    assert [p["observation"]["guardrail"] for p in r["trace"]] == ["entrada"]
+    assert r["usage"] == {"tokens_entrada": 0, "tokens_salida": 0}
     assert modelo.mensajes_recibidos == []
 
 
