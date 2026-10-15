@@ -1,6 +1,9 @@
 """Los prompts de los agentes. Ninguno nombra un lenguaje ni una regla concreta:
 lo específico del repo llega por buscar_reglas."""
 
+# Va en metadata.prompt_version de cada corrida y en la columna prompt_version del CSV.
+VERSION = "v1"
+
 BASE = """Eres un revisor de código senior: exigente, concreto y sin falsas alarmas.
 Revisas el diff de un repositorio cuyo código ya tiene el cambio aplicado.
 

@@ -1,0 +1,86 @@
+{
+ "_fuente": "Transcrita del «Anexo — precios de la tabla de modelos» de taller-04-llmops.pdf (la tabla semestral del curso no viene en el zip). evaluar_llmops.py y resumir_trazas.py la buscan en fuentes/modelos/ de una carpeta superior.",
+ "models": [
+  {
+   "id": "propietario_grande",
+   "provider": "anthropic",
+   "model": "claude-opus-4-8",
+   "input_usd_per_1m": 5.0,
+   "output_usd_per_1m": 25.0,
+   "verified_at": "2026-07-10",
+   "env": "ANTHROPIC_API_KEY"
+  },
+  {
+   "id": "propietario_balanceado",
+   "provider": "anthropic",
+   "model": "claude-sonnet-4-6",
+   "input_usd_per_1m": 3.0,
+   "output_usd_per_1m": 15.0,
+   "verified_at": "2026-07-10",
+   "env": "ANTHROPIC_API_KEY"
+  },
+  {
+   "id": "propietario_economico",
+   "provider": "openai",
+   "model": "gpt-4o-mini",
+   "input_usd_per_1m": 0.15,
+   "output_usd_per_1m": 0.6,
+   "verified_at": "2026-08-26",
+   "env": "OPENAI_API_KEY"
+  },
+  {
+   "id": "openai_razonamiento",
+   "provider": "openai",
+   "model": "gpt-5.6-luna",
+   "input_usd_per_1m": 0.2,
+   "output_usd_per_1m": 1.2,
+   "verified_at": "2026-09-18",
+   "env": "OPENAI_API_KEY"
+  },
+  {
+   "id": "juez_economico",
+   "provider": "anthropic",
+   "model": "claude-haiku-4-5",
+   "input_usd_per_1m": 1.0,
+   "output_usd_per_1m": 5.0,
+   "verified_at": "2026-07-10",
+   "env": "ANTHROPIC_API_KEY"
+  },
+  {
+   "id": "open_weight_local",
+   "provider": "ollama",
+   "model": "llama3.1:8b",
+   "input_usd_per_1m": 0.0,
+   "output_usd_per_1m": 0.0,
+   "verified_at": null,
+   "env": null
+  },
+  {
+   "id": "base_local",
+   "provider": "huggingface",
+   "model": "openai-community/gpt2",
+   "input_usd_per_1m": 0.0,
+   "output_usd_per_1m": 0.0,
+   "verified_at": null,
+   "env": null
+  },
+  {
+   "id": "open_weight_pequeno",
+   "provider": "ollama",
+   "model": "qwen3:1.7b",
+   "input_usd_per_1m": 0.0,
+   "output_usd_per_1m": 0.0,
+   "verified_at": null,
+   "env": null
+  },
+  {
+   "id": "open_weight_razonamiento",
+   "provider": "ollama",
+   "model": "gpt-oss:20b",
+   "input_usd_per_1m": 0.0,
+   "output_usd_per_1m": 0.0,
+   "verified_at": null,
+   "env": null
+  }
+ ]
+}

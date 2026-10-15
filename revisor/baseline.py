@@ -26,6 +26,7 @@ from .contexto import Contexto
 from .estado import Estado
 from .frenos import LIMITE_TOKENS, MAX_PASOS, RESERVA_TOKENS
 from .guardrails import GuardaChecks, detectar_inyeccion
+from .observabilidad import observacion
 from .informe import redactar
 from .perfil import cargar_perfil
 from .rag.indice import construir_indice
@@ -39,9 +40,11 @@ def archivos_del_diff(diff: str) -> list[str]:
 def avisar_inyeccion(diff: str, traza: Traza) -> str:
     """Si lo que el parche añade le habla al revisor, se avisa a los agentes y queda en la traza.
     No se bloquea: el parche con una instrucción escondida es el que más necesita revisión."""
-    inicio = time.perf_counter()
     anadido = "\n".join(l[1:] for l in diff.splitlines() if l.startswith("+") and not l.startswith("+++"))
-    intencion = detectar_inyeccion(anadido)
+    with observacion("inyeccion_en_parche", "guardrail", input=anadido) as span:
+        inicio = time.perf_counter()
+        intencion = detectar_inyeccion(anadido)
+        span.update(output={"decision": "avisar" if intencion else "pasar", "motivo": intencion})
     traza.evento("guardrail", nombre="inyeccion_en_parche", decision="avisar" if intencion else "pasar",
                  motivo=intencion, latencia_ms=round((time.perf_counter() - inicio) * 1000, 3))
     if not intencion:
@@ -130,7 +133,9 @@ class RevisorUnico(RevisorBase):
             return {"archivos": archivos_del_diff(estado["diff"])}
 
         def reviewer(estado: Estado) -> dict:
-            hallazgos, corte = revisar("reviewer_unico", self.sistema, estado["diff"], TODAS, contexto)
+            with observacion("reviewer_unico", "agent", input={"archivos": estado["archivos"]}) as span:
+                hallazgos, corte = revisar("reviewer_unico", self.sistema, estado["diff"], TODAS, contexto)
+                span.update(output={"hallazgos": len(hallazgos), "corte": corte})
             avisos = [f"El reviewer se detuvo por {corte}: la revisión no se completó."] if corte else []
             return {"hallazgos": hallazgos, "avisos": avisos}
 

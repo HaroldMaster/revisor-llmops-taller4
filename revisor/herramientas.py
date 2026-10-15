@@ -20,6 +20,7 @@ from typing import Literal
 from langchain_core.tools import tool
 
 from .guardrails import GuardaChecks
+from .observabilidad import observacion, recortar
 from .perfil import Perfil
 from .rag.indice import Indice
 from .traza import Traza
@@ -51,24 +52,30 @@ def crear_herramientas(
     código que una cita de regla no fue inventada."""
 
     def registrada(funcion):
+        # Cada consulta al RAG es un retriever; las demás herramientas, tool.
+        tipo = "retriever" if funcion.__name__ == "buscar_reglas" else "tool"
+
         @wraps(funcion)
         def envoltura(**argumentos):
-            inicio = time.perf_counter()
-            try:
-                resultado = funcion(**argumentos)
-            except Exception as error:  # un fallo es una observación, no un final
-                resultado = _error(f"{type(error).__name__}: {error}")
-            if traza is not None:
-                fallo = resultado.startswith('{"error"')
-                traza.herramienta(
-                    agente,
-                    funcion.__name__,
-                    argumentos,
-                    len(resultado),
-                    round((time.perf_counter() - inicio) * 1000),
-                    error=json.loads(resultado)["error"] if fallo else None,
-                    resultado=resultado,
-                )
+            with observacion(funcion.__name__, tipo, input=argumentos, metadata={"agente": agente}) as span:
+                inicio = time.perf_counter()
+                try:
+                    resultado = funcion(**argumentos)
+                except Exception as error:  # un fallo es una observación, no un final
+                    resultado = _error(f"{type(error).__name__}: {error}")
+                fallo = json.loads(resultado)["error"] if resultado.startswith('{"error"') else None
+                if traza is not None:
+                    traza.herramienta(
+                        agente,
+                        funcion.__name__,
+                        argumentos,
+                        len(resultado),
+                        round((time.perf_counter() - inicio) * 1000),
+                        error=fallo,
+                        resultado=resultado,
+                    )
+                span.update(output=recortar(resultado), metadata={"agente": agente, "tamano_resultado": len(resultado)},
+                            **({"level": "ERROR", "status_message": recortar(fallo)} if fallo else {}))
             return resultado
 
         return envoltura
@@ -194,8 +201,10 @@ def crear_herramientas(
             tipo: "lint", "tests" o "tipos".
         """
         if guarda_checks is not None:
-            inicio = time.perf_counter()
-            decision, motivo = guarda_checks.decidir()
+            with observacion("guarda_correr_checks", "guardrail", input={"tipo": tipo}) as span:
+                inicio = time.perf_counter()
+                decision, motivo = guarda_checks.decidir()
+                span.update(output={"decision": decision, "motivo": motivo})
             if traza is not None:
                 traza.evento("guardrail", nombre="correr_checks", agente=agente, decision=decision, motivo=motivo,
                              latencia_ms=round((time.perf_counter() - inicio) * 1000, 3))

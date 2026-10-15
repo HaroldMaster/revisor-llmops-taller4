@@ -12,6 +12,8 @@ este adaptador la resuelve, corre el sistema y devuelve:
     trace      un paso por acción: {"agente", "tool", "observation"}
     contextos  los fragmentos que devolvió buscar_reglas, completos
     guardrail  {"entrada": "ok|redactada|bloqueada", "salida": "ok|redactada|bloqueada"}
+    traza_id   el id de la traza en Langfuse, para ir de una fila del CSV a sus spans
+    prompt_version  la versión de los prompts con que corrió
 
 La pregunta pasa por validar_entrada antes de buscar el parche, y la respuesta y el informe
 por validar_salida antes de devolverse. Cada decisión es además un paso de la traza.
@@ -24,9 +26,11 @@ import re
 import time
 from pathlib import Path
 
+from .agentes.prompts import VERSION as PROMPT_VERSION
 from .config import RAIZ
 from .guardrails import redactar_pii, validar_entrada, validar_salida
 from .multiagente import RevisorMultiagente
+from .observabilidad import atributos_de_corrida, flush, observacion
 
 ABSTENCION = "No puedo responder con los datos disponibles."
 CARPETA_PARCHES = RAIZ / "evaluacion"
@@ -100,9 +104,11 @@ def pasos_de(ruta_traza: str | Path) -> list[dict]:
 
 def aplicar_guardrail(validador, canal: str, texto: str) -> tuple[bool, str, str, dict]:
     """Corre un validador y devuelve (ok, texto, decisión para el evaluador, paso de la traza)."""
-    inicio = time.perf_counter()
-    ok, resultado = validador(texto)
-    decision = "bloqueada" if not ok else ("redactada" if resultado != texto else "ok")
+    with observacion(f"validar_{canal}", "guardrail", input=texto) as span:
+        inicio = time.perf_counter()
+        ok, resultado = validador(texto)
+        decision = "bloqueada" if not ok else ("redactada" if resultado != texto else "ok")
+        span.update(output={"decision": decision, "texto": resultado})
     # agente=None: el paso existe, pero el evaluador no lo cuenta como un agente más.
     paso = {"agente": None, "tool": None, "observation": {
         "guardrail": canal, "decision": decision, "motivo": None if ok else resultado,
@@ -136,6 +142,18 @@ class Sistema:
                 "guardrail": {"entrada": entrada, "salida": "ok"}}
 
     def run(self, pregunta: str) -> dict:
+        """La raíz de la traza envuelve los guardrails, y se cierra aunque algo adentro lance."""
+        try:
+            with atributos_de_corrida(PROMPT_VERSION), observacion("revisor", "agent", input=pregunta) as raiz:
+                r = self._revisar(pregunta)
+                raiz.update(output=r["answer"], metadata={
+                    "status": r["status"], "guardrail": r["guardrail"], "modelo": r["model"], "usage": r["usage"],
+                })
+        finally:
+            flush()
+        return {**r, "traza_id": raiz.trace_id, "prompt_version": PROMPT_VERSION}
+
+    def _revisar(self, pregunta: str) -> dict:
         ok, pregunta, entrada, paso_entrada = aplicar_guardrail(validar_entrada, "entrada", pregunta)
         if not ok:
             return self._sin_revision(f"{ABSTENCION} {pregunta}", "bloqueado", entrada, paso_entrada)
@@ -154,7 +172,7 @@ class Sistema:
         else:
             answer = respuesta_corta(r.get("hallazgos", []), status)
         ok_respuesta, answer, salida, paso_salida = aplicar_guardrail(validar_salida, "salida", answer)
-        ok_informe, informe, _, _ = aplicar_guardrail(validar_salida, "salida", r["answer"])
+        ok_informe, informe, _, _ = aplicar_guardrail(validar_salida, "informe", r["answer"])
         if not ok_informe and ok_respuesta:
             salida = "bloqueada"
         return {

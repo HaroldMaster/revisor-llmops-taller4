@@ -21,6 +21,7 @@ from .agentes.verificador import comprobar_en_codigo, unir, verificar_con_modelo
 from .baseline import RevisorBase, archivos_del_diff
 from .contexto import Contexto
 from .estado import Estado
+from .observabilidad import en_hilo, observacion
 
 MAX_PASOS_REVIEWER = 10
 VERIFICACIONES_EN_PARALELO = 4
@@ -43,10 +44,12 @@ class RevisorMultiagente(RevisorBase):
             sistema = definicion["sistema"] if self.con_rag else sin_rag(definicion["sistema"])
 
             def reviewer(estado: Estado) -> dict:
-                hallazgos, corte = revisar(
-                    nombre, sistema, estado["diff"], herramientas, contexto,
-                    max_pasos=MAX_PASOS_REVIEWER,
-                )
+                with observacion(nombre, "agent", input={"archivos": estado["archivos"]}) as span:
+                    hallazgos, corte = revisar(
+                        nombre, sistema, estado["diff"], herramientas, contexto,
+                        max_pasos=MAX_PASOS_REVIEWER,
+                    )
+                    span.update(output={"hallazgos": len(hallazgos), "corte": corte})
                 avisos = [f"{nombre} se detuvo por {corte}; su revisión puede estar incompleta."] if corte else []
                 return {"candidatos": hallazgos, "avisos": avisos}
 
@@ -54,15 +57,19 @@ class RevisorMultiagente(RevisorBase):
 
         def nodo_unir(estado: Estado) -> dict:
             candidatos = estado.get("candidatos", [])
-            unidos = unir(candidatos)
+            with observacion("unir", "chain", input={"candidatos": len(candidatos)}) as span:
+                unidos = unir(candidatos)
+                span.update(output={"unidos": len(unidos)})
             contexto.traza.evento("unir", candidatos=len(candidatos), unidos=len(unidos))
             return {"hallazgos": unidos}
 
         def comprobar(estado: Estado) -> dict:
-            comprobados = [
-                comprobar_en_codigo(h, contexto, exigir_cita=self.con_rag) for h in estado["hallazgos"]
-            ]
-            descartados = [h for h in comprobados if h.veredicto == "descartado"]
+            with observacion("comprobar_en_codigo", "chain", input={"hallazgos": len(estado["hallazgos"])}) as span:
+                comprobados = [
+                    comprobar_en_codigo(h, contexto, exigir_cita=self.con_rag) for h in estado["hallazgos"]
+                ]
+                descartados = [h for h in comprobados if h.veredicto == "descartado"]
+                span.update(output={"descartados": len(descartados)})
             contexto.traza.evento(
                 "comprobar_en_codigo",
                 descartados=[{"id": h.id, "motivo": h.motivo_veredicto} for h in descartados],
@@ -71,10 +78,13 @@ class RevisorMultiagente(RevisorBase):
 
         def verificar(estado: Estado) -> dict:
             pendientes = [h for h in estado["hallazgos"] if h.veredicto == "pendiente"]
-            with ThreadPoolExecutor(VERIFICACIONES_EN_PARALELO) as hilos:
-                verificados = list(
-                    hilos.map(lambda h: verificar_con_modelo(h, estado["diff"], contexto), pendientes)
-                )
+            with observacion("verificador", "agent", input={"pendientes": len(pendientes)}) as span:
+                with ThreadPoolExecutor(VERIFICACIONES_EN_PARALELO) as hilos:
+                    tareas = [hilos.submit(*en_hilo(verificar_con_modelo, h, estado["diff"], contexto))
+                              for h in pendientes]
+                    verificados = [t.result() for t in tareas]
+                span.update(output={v: sum(h.veredicto == v for h in verificados)
+                                    for v in {h.veredicto for h in verificados}})
             por_id = {h.id: h for h in verificados}
             for h in verificados:
                 contexto.traza.evento("veredicto", id=h.id, veredicto=h.veredicto, motivo=h.motivo_veredicto)
@@ -87,7 +97,10 @@ class RevisorMultiagente(RevisorBase):
             return {"hallazgos": [por_id.get(h.id, h) for h in estado["hallazgos"]], "avisos": avisos}
 
         def nodo_sintetizar(estado: Estado) -> dict:
-            return {"informe": sintetizar(estado["hallazgos"], estado.get("avisos", []), contexto)}
+            with observacion("sintetizador", "agent", input={"hallazgos": len(estado["hallazgos"])}) as span:
+                informe = sintetizar(estado["hallazgos"], estado.get("avisos", []), contexto)
+                span.update(output={"caracteres": len(informe or "")})
+            return {"informe": informe}
 
         def tras_comprobar(estado: Estado) -> str:
             hay_pendientes = any(h.veredicto == "pendiente" for h in estado["hallazgos"])

@@ -124,6 +124,10 @@ def detectar_clave(texto: str) -> bool:
     return _CLAVES.search(texto or "") is not None
 
 
+def redactar_claves(texto: str) -> str:
+    return _CLAVES.sub("[CLAVE]", texto)
+
+
 def validar_entrada(texto: str) -> tuple[bool, str]:
     intencion = detectar_inyeccion(texto)
     if intencion:

@@ -1,4 +1,7 @@
 import hashlib
+import os
+
+os.environ["REVISOR_LANGFUSE"] = "0"  # antes de importar el revisor: los tests no envían spans
 from pathlib import Path
 
 import numpy as np
