@@ -1,0 +1,9 @@
+1. Una entrada bloqueada que trae un correo:
+   ¿el correo está en reports/traces.jsonl?  True
+
+2. Un guardrail de entrada que tarda 0,4 s:
+   la corrida tardó 0.40 s; la traza dice latency_seconds=0.0
+
+3. El agente lanza una excepción:
+   run_instrumented propagó: ConnectionError: el proveedor no responde
+   filas en reports/traces.jsonl antes: 2 · después: 2

@@ -6,6 +6,7 @@
 # dependencias y cachés
 node_modules/
 .venv/
+.venv-lab/
 __pycache__/
 *.pyc
 .pytest_cache/

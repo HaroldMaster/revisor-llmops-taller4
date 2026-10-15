@@ -1,0 +1,18 @@
+1. instrumented_agent.py escribió 4 filas en reports/traces.jsonl
+   campos de la primera: ['answer', 'latency_seconds', 'observed_at', 'question', 'status', 'trace']
+   ¿alguna lleva el id del caso?  False
+   ¿existe reports/answers.json, lo que evaluation.py lee?  False
+
+2. evaluation.evaluate_answers con lo que hay —sin una sola excepción—:
+   id=1 feliz       abstention_score=0
+   id=2 ambiguo     abstention_score=0
+   id=3 negativo    abstention_score=0
+   id=4 adversarial abstention_score=0
+
+3. lo mismo con las respuestas correctas, casadas a mano por id:
+   id=1 feliz       abstention_score=0
+   id=2 ambiguo     abstention_score=0
+   id=3 negativo    abstention_score=1
+   id=4 adversarial abstention_score=0
+
+   Un 0 que significa «no aplica» y otro que significa «falló» no se pueden promediar.
