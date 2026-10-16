@@ -26,3 +26,5 @@ corridas/
 
 # RAGAS caso por caso: caché de evaluacion/ragas_por_caso.py; el resultado es resultados/ragas_*.csv
 resultados/*.casos/
+informe/
+informe-fuente/
