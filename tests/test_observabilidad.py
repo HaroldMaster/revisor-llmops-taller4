@@ -66,7 +66,9 @@ def test_una_corrida_es_una_traza_con_su_raiz_y_un_span_por_cada_cosa(spans, emb
     assert por_tipo["retriever"] == ["buscar_reglas"]
     assert por_tipo["tool"] == ["leer_archivo"]
     assert set(por_tipo["generation"]) == {"reviewer_unico"} and len(por_tipo["generation"]) == 4
-    assert por_tipo["guardrail"] == ["validar_entrada", "inyeccion_en_parche", "validar_salida", "validar_informe"]
+    assert por_tipo["guardrail"] == [
+        "validar_entrada", "lista_de_permitidos", "inyeccion_en_parche", "validar_salida", "validar_informe",
+    ]
 
 
 def test_la_raiz_lleva_sesion_etiqueta_y_version_de_prompt(spans, embeddings, tmp_path, monkeypatch):

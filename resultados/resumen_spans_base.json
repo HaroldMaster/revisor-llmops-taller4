@@ -1,0 +1,195 @@
+{
+  "corridas": 24,
+  "corridas_sin_span_corrida": [],
+  "latencia_p50_ms": 13867.0,
+  "latencia_p95_ms": 50379.75,
+  "tokens_entrada": 1418892,
+  "tokens_salida": 77753,
+  "costo_usd": 0.259486,
+  "precio": "fila propietario_economico (gpt-4o-mini), verificada el 2026-08-26",
+  "errores": 2,
+  "por_span": {
+    "llm:verificador": {
+      "n": 218,
+      "ms_total": 307470.0,
+      "ms_medio": 1410.4,
+      "parte_del_total": 0.156,
+      "errores": 0
+    },
+    "agent:reviewer_clean_code": {
+      "n": 19,
+      "ms_total": 175125.0,
+      "ms_medio": 9217.1,
+      "parte_del_total": 0.089,
+      "errores": 0
+    },
+    "llm:reviewer_clean_code": {
+      "n": 68,
+      "ms_total": 170643.0,
+      "ms_medio": 2509.5,
+      "parte_del_total": 0.087,
+      "errores": 0
+    },
+    "agent:reviewer_bugs": {
+      "n": 19,
+      "ms_total": 158370.0,
+      "ms_medio": 8335.3,
+      "parte_del_total": 0.08,
+      "errores": 0
+    },
+    "llm:reviewer_bugs": {
+      "n": 77,
+      "ms_total": 154075.0,
+      "ms_medio": 2001.0,
+      "parte_del_total": 0.078,
+      "errores": 0
+    },
+    "agent:reviewer_reglas": {
+      "n": 19,
+      "ms_total": 152668.0,
+      "ms_medio": 8035.2,
+      "parte_del_total": 0.077,
+      "errores": 0
+    },
+    "llm:reviewer_reglas": {
+      "n": 81,
+      "ms_total": 143969.0,
+      "ms_medio": 1777.4,
+      "parte_del_total": 0.073,
+      "errores": 0
+    },
+    "agent:reviewer_impacto": {
+      "n": 19,
+      "ms_total": 115428.0,
+      "ms_medio": 6075.2,
+      "parte_del_total": 0.059,
+      "errores": 0
+    },
+    "llm:reviewer_impacto": {
+      "n": 68,
+      "ms_total": 113975.0,
+      "ms_medio": 1676.1,
+      "parte_del_total": 0.058,
+      "errores": 2
+    },
+    "agent:verificador": {
+      "n": 18,
+      "ms_total": 110893.0,
+      "ms_medio": 6160.7,
+      "parte_del_total": 0.056,
+      "errores": 0
+    },
+    "agent:sintetizador": {
+      "n": 19,
+      "ms_total": 87178.0,
+      "ms_medio": 4588.3,
+      "parte_del_total": 0.044,
+      "errores": 0
+    },
+    "llm:sintetizador": {
+      "n": 26,
+      "ms_total": 87152.0,
+      "ms_medio": 3352.0,
+      "parte_del_total": 0.044,
+      "errores": 0
+    },
+    "agent:reviewer_eficiencia": {
+      "n": 19,
+      "ms_total": 86129.0,
+      "ms_medio": 4533.1,
+      "parte_del_total": 0.044,
+      "errores": 0
+    },
+    "llm:reviewer_eficiencia": {
+      "n": 57,
+      "ms_total": 81796.0,
+      "ms_medio": 1435.0,
+      "parte_del_total": 0.042,
+      "errores": 0
+    },
+    "retriever:buscar_reglas": {
+      "n": 86,
+      "ms_total": 15170.0,
+      "ms_medio": 176.4,
+      "parte_del_total": 0.008,
+      "errores": 0
+    },
+    "herramienta:correr_checks": {
+      "n": 12,
+      "ms_total": 9684.0,
+      "ms_medio": 807.0,
+      "parte_del_total": 0.005,
+      "errores": 0
+    },
+    "herramienta:grep_repo": {
+      "n": 106,
+      "ms_total": 311.0,
+      "ms_medio": 2.9,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "herramienta:leer_archivo": {
+      "n": 187,
+      "ms_total": 204.0,
+      "ms_medio": 1.1,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "chain:comprobar_en_codigo": {
+      "n": 19,
+      "ms_total": 15.0,
+      "ms_medio": 0.8,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "guardrail:validar_informe": {
+      "n": 19,
+      "ms_total": 15.0,
+      "ms_medio": 0.8,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "chain:unir": {
+      "n": 19,
+      "ms_total": 7.0,
+      "ms_medio": 0.4,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "guardrail:lista_de_permitidos": {
+      "n": 19,
+      "ms_total": 5.0,
+      "ms_medio": 0.3,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "guardrail:validar_salida": {
+      "n": 19,
+      "ms_total": 5.0,
+      "ms_medio": 0.3,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "guardrail:inyeccion_en_parche": {
+      "n": 19,
+      "ms_total": 4.0,
+      "ms_medio": 0.2,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "guardrail:validar_entrada": {
+      "n": 24,
+      "ms_total": 3.0,
+      "ms_medio": 0.1,
+      "parte_del_total": 0.0,
+      "errores": 0
+    },
+    "guardrail:guarda_correr_checks": {
+      "n": 12,
+      "ms_total": 0.0,
+      "ms_medio": 0.0,
+      "parte_del_total": 0.0,
+      "errores": 0
+    }
+  }
+}

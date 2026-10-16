@@ -111,9 +111,14 @@ def test_un_test_que_ejecuta_borra_o_sale_a_la_red_bloquea_los_checks(linea):
     assert "ejecuta, borra o sale a la red" in motivo
 
 
-@pytest.mark.parametrize("parche", PARCHES, ids=lambda p: p.stem)
-def test_ningun_parche_del_golden_set_bloquea_los_checks(parche, perfil):
+@pytest.mark.parametrize("parche", [p for p in PARCHES if p.stem != "S01"], ids=lambda p: p.stem)
+def test_ningun_parche_legitimo_del_golden_set_bloquea_los_checks(parche, perfil):
     assert GuardaChecks(parche.read_text(encoding="utf-8"), perfil.codigo).motivo is None
+
+
+def test_el_parche_s01_que_toca_package_json_bloquea_los_checks(perfil):
+    motivo = GuardaChecks((RAIZ / "evaluacion/casos/S01.patch").read_text(encoding="utf-8"), perfil.codigo).motivo
+    assert motivo == "el parche toca archivos fuera de la lista de permitidos: package.json"
 
 
 def test_los_renombres_cuentan_como_archivos_tocados():
@@ -240,3 +245,13 @@ def test_la_lista_de_permitidos_entiende_doble_asterisco_como_el_perfil(ruta, es
     from revisor.guardrails import coincide
 
     assert coincide(ruta, "src/**/*.ts") is esperado
+
+
+def test_la_lista_de_permitidos_deja_su_decision_aunque_nadie_pida_los_checks(embeddings, tmp_path):
+    modelo = ModeloDeGuion([responde("listo")], estructurados=[{"hallazgos": []}])
+    r = sistema(modelo, embeddings, tmp_path).run("Revisa casos/S01.patch.")
+    decisiones = {p["observation"]["guardrail"]: p["observation"] for p in r["trace"]
+                  if isinstance(p["observation"], dict) and "guardrail" in p["observation"]}
+    assert decisiones["lista_de_permitidos"]["decision"] == "bloquear"
+    assert "package.json" in decisiones["lista_de_permitidos"]["motivo"]
+    assert not any(p["tool"] == "correr_checks" for p in r["trace"])

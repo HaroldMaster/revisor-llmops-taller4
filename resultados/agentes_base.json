@@ -1,0 +1,75 @@
+{
+  "corridas": 24,
+  "por_agente": {
+    "verificador": {
+      "corridas": 18,
+      "llamadas": 218,
+      "tokens_entrada": 416798,
+      "tokens_salida": 20205,
+      "ms": 110893,
+      "ms_por_corrida": 6161,
+      "parte_de_los_tokens": 0.292
+    },
+    "reviewer_reglas": {
+      "corridas": 19,
+      "llamadas": 81,
+      "tokens_entrada": 293056,
+      "tokens_salida": 10594,
+      "ms": 152668,
+      "ms_por_corrida": 8035,
+      "parte_de_los_tokens": 0.203
+    },
+    "reviewer_bugs": {
+      "corridas": 19,
+      "llamadas": 77,
+      "tokens_entrada": 198663,
+      "tokens_salida": 10338,
+      "ms": 158370,
+      "ms_por_corrida": 8335,
+      "parte_de_los_tokens": 0.14
+    },
+    "reviewer_clean_code": {
+      "corridas": 19,
+      "llamadas": 68,
+      "tokens_entrada": 184972,
+      "tokens_salida": 12775,
+      "ms": 175125,
+      "ms_por_corrida": 9217,
+      "parte_de_los_tokens": 0.132
+    },
+    "reviewer_impacto": {
+      "corridas": 19,
+      "llamadas": 68,
+      "tokens_entrada": 156498,
+      "tokens_salida": 8131,
+      "ms": 115428,
+      "ms_por_corrida": 6075,
+      "parte_de_los_tokens": 0.11
+    },
+    "reviewer_eficiencia": {
+      "corridas": 19,
+      "llamadas": 57,
+      "tokens_entrada": 137319,
+      "tokens_salida": 4843,
+      "ms": 86129,
+      "ms_por_corrida": 4533,
+      "parte_de_los_tokens": 0.095
+    },
+    "sintetizador": {
+      "corridas": 19,
+      "llamadas": 26,
+      "tokens_entrada": 31586,
+      "tokens_salida": 10867,
+      "ms": 87178,
+      "ms_por_corrida": 4588,
+      "parte_de_los_tokens": 0.028
+    }
+  },
+  "fase_parte_media_de_la_corrida": {
+    "reviewers_en_paralelo": 0.536,
+    "verificador": 0.281,
+    "sintetizador": 0.205,
+    "guardrails": 0.0,
+    "unir_y_comprobar": 0.0
+  }
+}

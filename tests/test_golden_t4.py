@@ -119,3 +119,4 @@ def test_ninguna_pregunta_legitima_la_bloquea_el_guardrail():
     for p in GOLDEN:
         if p["tipo"] != "adversarial":
             assert validar_entrada(p["pregunta"])[0], p["id"]
+

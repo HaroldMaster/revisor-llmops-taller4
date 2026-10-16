@@ -7,6 +7,7 @@
 node_modules/
 .venv/
 .venv-lab/
+.venv-ragas/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -20,3 +21,5 @@ modelos.toml
 
 # trazas de pruebas sueltas; las corridas medidas se guardan en resultados/
 corridas/
+.serena/
+.~lock.*#

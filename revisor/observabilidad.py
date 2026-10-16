@@ -2,6 +2,7 @@
 
     revisor (agent, la raíz: el span «corrida»)
     ├── validar_entrada (guardrail)
+    ├── lista_de_permitidos (guardrail)            ¿se pueden correr los checks sobre este parche?
     ├── inyeccion_en_parche (guardrail)
     ├── reviewer_bugs … reviewer_impacto (agent, en paralelo)
     │   ├── reviewer_bugs (generation)            una por llamada al modelo

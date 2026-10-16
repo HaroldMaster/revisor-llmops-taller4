@@ -1,0 +1,36 @@
+{
+  "pares": 22,
+  "acuerdo": 0.818,
+  "kappa": 0.389,
+  "discrepancias": [
+    {
+      "id": "C05",
+      "tipo": "simple",
+      "verificador": "falla",
+      "juez": "aprueba"
+    },
+    {
+      "id": "C06",
+      "tipo": "multi",
+      "verificador": "aprueba",
+      "juez": "falla"
+    },
+    {
+      "id": "A01",
+      "tipo": "multi",
+      "verificador": "aprueba",
+      "juez": "falla"
+    },
+    {
+      "id": "X03",
+      "tipo": "adversarial",
+      "verificador": "falla",
+      "juez": "aprueba"
+    }
+  ],
+  "excluidos_sin_parsear": [],
+  "sin_par": [
+    "M01",
+    "M02"
+  ]
+}
