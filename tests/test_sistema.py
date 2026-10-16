@@ -116,3 +116,15 @@ def test_dos_reglas_del_repo_en_la_misma_linea_son_dos_problemas():
         "- [medio · reglas · R6] src/utils/dinero.ts:21 — no tiene test",
     ]
 
+
+def test_una_linea_lleva_las_afirmaciones_distintas_de_todos_sus_hallazgos():
+    texto = respuesta_corta([_h("a", "R12", "critico", "cobra impuesto de más"), _h("b", None, afirmacion="rompe el test"),
+                             _h("c", None, afirmacion="cobra impuesto de más")], "ok")
+    assert texto == "- [critico · reglas · R12] src/utils/dinero.ts:21 — cobra impuesto de más / rompe el test"
+
+
+def test_lo_que_no_cita_una_regla_del_repo_va_con_el_primero_de_su_lugar():
+    partes = por_regla([_h("a", None, "critico"), _h("b", "R12", "critico"), _h("c", "clean-code-typescript#8")])
+    assert [[h["id"] for h in p] for p in partes] == [["a", "b", "c"]]
+    partes = por_regla([_h("a", "R10"), _h("b", None), _h("c", "R6")])
+    assert [[h["id"] for h in p] for p in partes] == [["a", "b"], ["c"]]

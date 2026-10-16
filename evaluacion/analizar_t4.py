@@ -178,9 +178,10 @@ def tres_fuentes(filas: list[dict], etiquetas: dict[str, dict]) -> dict:
 
 
 # Lo que la mejora de la 2.c buscaba, y con qué parte: el resto de los cambios es azar del modelo.
-OBJETIVOS = {"S01": "prompt v2: severidad y seguridad", "A01": "prompt v2: test borrado",
-             "C01": "prompt v2: test roto", "P01": "prompt v2: test que falta",
-             "C09": "adaptador: dos reglas en una línea"}
+OBJETIVOS = {"S01": "prompt v2: severidad y seguridad",
+             "A01": "prompt v2 y evidencia borrada (v2.1): test borrado",
+             "C01": "prompt v2 y respuesta corta (v2.1): test roto", "P01": "prompt v2: test que falta",
+             "C09": "adaptador y respuesta corta (v2.1): dos reglas en una línea"}
 
 
 def comparar(antes: list[dict], despues: list[dict], objetivos: dict[str, str] = OBJETIVOS) -> dict:

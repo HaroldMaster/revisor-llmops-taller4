@@ -66,7 +66,8 @@ class RevisorMultiagente(RevisorBase):
         def comprobar(estado: Estado) -> dict:
             with observacion("comprobar_en_codigo", "chain", input={"hallazgos": len(estado["hallazgos"])}) as span:
                 comprobados = [
-                    comprobar_en_codigo(h, contexto, exigir_cita=self.con_rag) for h in estado["hallazgos"]
+                    comprobar_en_codigo(h, contexto, exigir_cita=self.con_rag, diff=estado["diff"])
+                    for h in estado["hallazgos"]
                 ]
                 descartados = [h for h in comprobados if h.veredicto == "descartado"]
                 span.update(output={"descartados": len(descartados)})

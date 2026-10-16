@@ -78,7 +78,9 @@ def respuesta_corta(hallazgos: list[dict], status: str, limite: int = MAX_RESPUE
 
     Los hallazgos de una misma ubicación se juntan, salvo que citen reglas distintas del repo: R10
     (código sin uso) y R6 (falta el test) en la misma línea son dos problemas, y juntarlos dejaba
-    solo la explicación del primero (C09 en la medición base)."""
+    solo la explicación del primero (C09 en la medición base). Una línea lleva las afirmaciones
+    distintas de todos sus hallazgos: con solo la del primero, en C01 de la mejora se perdía la de
+    los dos agentes que decían que el test falla."""
     vigentes = [h for h in hallazgos if h.get("veredicto") != "descartado"]
     if not vigentes:
         return "Sin hallazgos." if status == "ok" else "La revisión se cortó antes de terminar y no dejó hallazgos."
@@ -89,7 +91,8 @@ def respuesta_corta(hallazgos: list[dict], status: str, limite: int = MAX_RESPUE
     lineas = []
     for (archivo, linea), grupo in grupos:
         etiquetas = list(dict.fromkeys([h["dimension"] for h in grupo] + [h["cita_regla"] for h in grupo if h.get("cita_regla")]))
-        lineas.append(f"- [{grupo[0]['severidad']} · {' · '.join(etiquetas)}] {archivo}:{linea} — {grupo[0]['afirmacion']}")
+        afirmaciones = " / ".join(dict.fromkeys(h["afirmacion"] for h in grupo))
+        lineas.append(f"- [{grupo[0]['severidad']} · {' · '.join(etiquetas)}] {archivo}:{linea} — {afirmaciones}")
     texto = "\n".join(lineas)
     if len(texto) <= limite:
         return texto

@@ -43,24 +43,44 @@ def unir(candidatos: list[Hallazgo]) -> list[Hallazgo]:
     return sorted(unidos.values(), key=lambda h: (h.archivo, h.linea, h.dimension))
 
 
-def comprobar_en_codigo(hallazgo: Hallazgo, contexto: Contexto, exigir_cita: bool = True) -> Hallazgo:
-    """Devuelve el hallazgo, descartado si no supera las comprobaciones sin modelo."""
+def lineas_borradas(diff: str, archivo: str) -> list[str]:
+    """Las líneas que el diff quita de `archivo`, sin el «-» inicial."""
+    borradas, actual = [], None
+    for linea in diff.splitlines():
+        if linea.startswith("--- "):
+            actual = linea[6:] if linea.startswith("--- a/") else None
+        elif linea.startswith("-") and actual == archivo:
+            borradas.append(linea[1:])
+    return borradas
+
+
+def comprobar_en_codigo(hallazgo: Hallazgo, contexto: Contexto, exigir_cita: bool = True, diff: str = "") -> Hallazgo:
+    """Devuelve el hallazgo, descartado si no supera las comprobaciones sin modelo.
+
+    La evidencia vale si es literal en el archivo actual o en una línea que el diff borra: un test
+    borrado ya no está en el archivo, y descartarlo por eso escondía el problema (A01 en la mejora)."""
     def descartar(motivo: str) -> Hallazgo:
         return hallazgo.model_copy(update={"veredicto": "descartado", "motivo_veredicto": motivo})
 
     perfil = contexto.perfil
     archivo = (perfil.raiz / hallazgo.archivo).resolve()
-    if not archivo.is_relative_to(perfil.raiz) or not archivo.is_file() or perfil.ignorado(archivo):
+    existe = archivo.is_relative_to(perfil.raiz) and archivo.is_file() and not perfil.ignorado(archivo)
+    borradas = [_normal(l) for l in lineas_borradas(diff, hallazgo.archivo)]
+    if not existe and not borradas:
         return descartar(f"Comprobación en código: el archivo {hallazgo.archivo} no existe en el repositorio")
 
     evidencia = next((_normal(l) for l in hallazgo.evidencia.splitlines() if l.strip()), "")
     if len(evidencia) < LARGO_MINIMO_EVIDENCIA:
         return descartar("Comprobación en código: la evidencia está vacía o es demasiado corta")
-    lineas = archivo.read_text(encoding="utf-8", errors="replace").splitlines()
+    lineas = archivo.read_text(encoding="utf-8", errors="replace").splitlines() if existe else []
     donde = [n for n, linea in enumerate(lineas, start=1) if evidencia in _normal(linea)]
-    if not donde:
-        return descartar("Comprobación en código: la evidencia no es una copia literal de ninguna línea del archivo")
-    cambios: dict = {"linea": min(donde, key=lambda n: abs(n - hallazgo.linea))}
+    if donde:
+        cambios: dict = {"linea": min(donde, key=lambda n: abs(n - hallazgo.linea))}
+    elif any(evidencia in linea for linea in borradas):
+        cambios = {}
+    else:
+        return descartar("Comprobación en código: la evidencia no es una copia literal de ninguna línea del archivo "
+                         "ni de las que borra el diff")
 
     if hallazgo.cita_regla and hallazgo.cita_regla not in contexto.citas_devueltas:
         if exigir_cita and hallazgo.dimension == "reglas":

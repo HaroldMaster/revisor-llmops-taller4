@@ -52,6 +52,37 @@ def test_una_evidencia_inventada_se_descarta_sin_preguntar_a_un_modelo(contexto)
     assert "copia literal" in comprobado.motivo_veredicto
 
 
+DIFF_QUE_BORRA = """diff --git a/src/errores.ts b/src/errores.ts
+--- a/src/errores.ts
++++ b/src/errores.ts
+@@ -10,3 +10,2 @@
+-export function viejo(): void {}
+diff --git a/src/borrado.test.ts b/src/borrado.test.ts
+--- a/src/borrado.test.ts
++++ /dev/null
+@@ -1,1 +0,0 @@
+-  it('rechaza cantidades que no son enteros positivos', () => {
+"""
+
+
+def test_la_evidencia_de_una_linea_que_el_diff_borra_pasa_y_conserva_la_linea(contexto):
+    comprobado = comprobar_en_codigo(hallazgo(linea=10, evidencia="export function viejo(): void {}"),
+                                     contexto, diff=DIFF_QUE_BORRA)
+    assert (comprobado.veredicto, comprobado.linea) == ("pendiente", 10)
+
+
+def test_un_archivo_borrado_entero_se_comprueba_contra_el_diff(contexto):
+    test_borrado = hallazgo(archivo="src/borrado.test.ts", linea=1,
+                            evidencia="it('rechaza cantidades que no son enteros positivos', () => {")
+    assert comprobar_en_codigo(test_borrado, contexto, diff=DIFF_QUE_BORRA).veredicto == "pendiente"
+    assert comprobar_en_codigo(test_borrado, contexto).veredicto == "descartado"
+
+
+def test_lo_que_el_diff_borra_de_otro_archivo_no_vale_como_evidencia(contexto):
+    otro = hallazgo(evidencia="it('rechaza cantidades que no son enteros positivos', () => {")
+    assert comprobar_en_codigo(otro, contexto, diff=DIFF_QUE_BORRA).veredicto == "descartado"
+
+
 def test_un_archivo_que_no_existe_se_descarta(contexto):
     assert comprobar_en_codigo(hallazgo(archivo="src/utilidades/x.ts"), contexto).veredicto == "descartado"
 
