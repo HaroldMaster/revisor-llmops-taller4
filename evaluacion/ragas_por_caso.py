@@ -8,7 +8,9 @@ en su propio proceso, uno tras otro, y su resultado queda en `<salida>.casos/<id
 termina; al volver a correr se saltan los casos ya hechos. Al final se juntan en `<salida>`.
 
 En serie a propósito: con seis procesos a la vez, gemma3 dejó de responder en el Ollama compartido
-de la H200 (2026-10-15, 18:49) y volvió apenas se detuvieron.
+de la H200 (2026-10-15, 18:49) y volvió apenas se detuvieron. Y con un tope por caso: el cliente
+de RAGAS no tiene timeout, y cuando la VPN se cayó (2026-10-15, ~20:33) un caso quedó esperando
+toda la noche. Un caso que pasa de MAX_MINUTOS se corta y se reintenta una vez.
 """
 
 from __future__ import annotations
@@ -24,7 +26,16 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 SCRIPT = RAIZ / "lab/ragas-langfuse/evaluar_ragas.py"
 PYTHON = RAIZ / ".venv-ragas/bin/python"
+MAX_MINUTOS = 40      # el caso más lento de la base tardó 18
 csv.field_size_limit(sys.maxsize)
+
+
+def correr_caso(argumentos: list[str], entorno: dict) -> subprocess.CompletedProcess | None:
+    """El caso en su proceso, con tope de tiempo; None si se pasó del tope."""
+    try:
+        return subprocess.run(argumentos, env=entorno, capture_output=True, text=True, timeout=MAX_MINUTOS * 60)
+    except subprocess.TimeoutExpired:
+        return None
 
 
 def main() -> None:
@@ -55,11 +66,17 @@ def main() -> None:
             w.writeheader()
             w.writerow(fila)
         inicio = time.time()
-        proceso = subprocess.run(
-            [str(PYTHON), "-u", str(SCRIPT), "csv", str(entrada), "--golden", str(a.golden),
-             "--salida", str(salida), "--juez", a.juez],
-            env=entorno, capture_output=True, text=True)
+        argumentos = [str(PYTHON), "-u", str(SCRIPT), "csv", str(entrada), "--golden", str(a.golden),
+                      "--salida", str(salida), "--juez", a.juez]
+        proceso = correr_caso(argumentos, entorno)
+        if proceso is None or proceso.returncode != 0:
+            print(f"[{n}/{len(filas)}] {fila['id']}: {'se pasó de ' + str(MAX_MINUTOS) + ' min' if proceso is None else 'falló'}; "
+                  "reintento", flush=True)
+            salida.unlink(missing_ok=True)
+            proceso = correr_caso(argumentos, entorno)
         entrada.unlink()
+        if proceso is None:
+            sys.exit(f"{fila['id']} se pasó de {MAX_MINUTOS} min dos veces: ¿VPN, Ollama? Vuelve a correr para seguir.")
         if proceso.returncode != 0:
             salida.unlink(missing_ok=True)
             sys.exit(f"{fila['id']} falló:\n{proceso.stdout[-1500:]}{proceso.stderr[-1500:]}")
