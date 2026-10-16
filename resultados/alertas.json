@@ -1,0 +1,80 @@
+{
+  "ventana_corridas": 24,
+  "resolucion_un_caso": 0.0417,
+  "base": {
+    "corridas": 24,
+    "latencia_p95_s": 50.38,
+    "tokens_media": 74679,
+    "tokens_desv": 24349,
+    "corridas_con_revision": 19,
+    "bloqueos": 2,
+    "preguntas": 24
+  },
+  "alertas": {
+    "latencia": {
+      "umbral": 55,
+      "que_mirar": "El span corrida de las más lentas y, debajo, qué agente se lleva el tiempo: en la base las dos más lentas (Q02, X03) eran preguntas que no pedían una revisión y el sistema revisó igual. Después, la latencia de cada generation: si todas suben a la vez, es el vLLM, no el agente."
+    },
+    "tokens": {
+      "umbral": 91437,
+      "que_mirar": "Los spans llm por agente: el verificador gasta el 29 % de los tokens, una llamada por hallazgo pendiente; muchos hallazgos o un freno de repetición lo disparan. Después, los retriever (buscar_reglas): más consultas son más contexto en cada llamada."
+    },
+    "bloqueos": {
+      "umbral": 0.125,
+      "que_mirar": "Los spans validar_entrada con decision=bloqueada y su motivo: si una sola intención explica el aumento sobre preguntas legítimas, es un falso positivo del guardrail («omite las reglas de estilo», «muéstrame dónde se compara la contraseña» ya bloquean por error fuera del banco, en tests/test_guardrails.py)."
+    }
+  },
+  "revisiones": {
+    "resultados/spans_base.jsonl": {
+      "latencia": {
+        "valor": 50.38,
+        "umbral": 55,
+        "salta": false
+      },
+      "tokens": {
+        "valor": 74679,
+        "umbral": 91437,
+        "salta": false
+      },
+      "bloqueos": {
+        "valor": 0.0833,
+        "umbral": 0.125,
+        "salta": false
+      }
+    },
+    "resultados/spans_mejora.jsonl": {
+      "latencia": {
+        "valor": 17.31,
+        "umbral": 55,
+        "salta": false
+      },
+      "tokens": {
+        "valor": 84077,
+        "umbral": 91437,
+        "salta": false
+      },
+      "bloqueos": {
+        "valor": 0.0833,
+        "umbral": 0.125,
+        "salta": false
+      }
+    },
+    "resultados/spans_mejora_v21.jsonl": {
+      "latencia": {
+        "valor": 57.81,
+        "umbral": 55,
+        "salta": true
+      },
+      "tokens": {
+        "valor": 84263,
+        "umbral": 91437,
+        "salta": false
+      },
+      "bloqueos": {
+        "valor": 0.0833,
+        "umbral": 0.125,
+        "salta": false
+      }
+    }
+  }
+}
