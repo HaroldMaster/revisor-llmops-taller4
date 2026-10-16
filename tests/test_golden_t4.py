@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from evaluacion.construir_golden_t4 import DESTINO, construir
+from evaluacion.construir_golden_t4 import AJUSTES, DESTINO, construir, esperados_de
 from revisor.guardrails import validar_entrada
 from revisor.sistema import parches_de, respuesta_corta
 
@@ -32,12 +32,15 @@ def acierta(caso: dict, respuesta: str, usadas=("buscar_reglas", "leer_archivo")
     return EVALUADOR.acierto_general(caso, respuesta, abstuvo, list(usadas))
 
 
-def respuesta_ideal(caso_t3: dict) -> str:
-    """La respuesta corta que daría el sistema si encontrara justo lo esperado del Taller 3."""
+def respuesta_ideal(caso: dict) -> str:
+    """La respuesta corta que daría el sistema si encontrara justo lo esperado (con el ajuste v2)."""
+    # Cada esperado en una línea distinta de su rango: respuesta_corta junta los hallazgos de una
+    # misma línea y deja solo la primera afirmación.
     hallazgos = [
-        {"dimension": "correctness", "severidad": "alto", "archivo": e["ubicaciones"][0]["archivo"],
-         "linea": e["ubicaciones"][0]["lineas"][0], "afirmacion": "hallazgo", "cita_regla": (e.get("reglas") or [None])[0]}
-        for e in caso_t3["esperados"]
+        {"dimension": "correctness", "severidad": e.get("severidad", "alto"), "archivo": e["ubicaciones"][0]["archivo"],
+         "linea": min(e["ubicaciones"][0]["lineas"][0] + k, e["ubicaciones"][0]["lineas"][1]),
+         "afirmacion": f"hallazgo: {(e.get('debe_mencionar') or [''])[0]}", "cita_regla": (e.get("reglas") or [None])[0]}
+        for k, e in enumerate(esperados_de(caso))
     ]
     return respuesta_corta(hallazgos, "ok")
 
@@ -81,9 +84,9 @@ def test_la_respuesta_con_lo_esperado_del_taller_3_acierta(id_caso):
 @pytest.mark.parametrize("id_caso", [i for i in sorted(TALLER3) if TALLER3[i]["esperados"]])
 def test_la_misma_respuesta_con_otra_linea_falla(id_caso):
     caso_t3 = TALLER3[id_caso]
-    movido = {**caso_t3, "esperados": [
+    movido = {"id": "movido", "esperados": [
         {**e, "ubicaciones": [{**u, "lineas": [u["lineas"][1] + 40, u["lineas"][1] + 40]} for u in e["ubicaciones"]]}
-        for e in caso_t3["esperados"]]}
+        for e in esperados_de(caso_t3)]}
     assert not acierta(POR_ID[id_caso], respuesta_ideal(movido))
 
 
@@ -120,3 +123,28 @@ def test_ninguna_pregunta_legitima_la_bloquea_el_guardrail():
         if p["tipo"] != "adversarial":
             assert validar_entrada(p["pregunta"])[0], p["id"]
 
+
+def test_la_v2_acepta_el_nombre_de_eslint_de_una_regla():
+    respuesta = ("- [alto · reglas · tseslint-no-explicit-any#1] src/pedidos/pedidos.ts:52 — usa any\n"
+                 "- [alto · reglas · eslint-no-console#2] src/pedidos/pedidos.ts:53 — deja un console.log")
+    assert acierta(POR_ID["C05"], respuesta)
+
+
+def test_la_v2_exige_la_palabra_que_explica_el_hallazgo_en_su_misma_linea():
+    sin_test = "- [medio · reglas · R10 · R6] src/utils/dinero.ts:21 — formatearCantidad no tiene consumidores"
+    con_test = sin_test + " y no tiene ningún test que la pruebe"
+    assert not acierta(POR_ID["C09"], sin_test)
+    assert acierta(POR_ID["C09"], con_test)
+
+
+def test_la_v2_exige_la_severidad_cuando_el_ajuste_la_pide():
+    base = ("- [critico · correctness] src/inventario/inventario.ts:27 — >= rompe el borde\n"
+            "- [{sev} · clean_code] package.json:9 — el pretest manda el entorno afuera")
+    assert not acierta(POR_ID["S01"], base.format(sev="alto"))
+    assert acierta(POR_ID["S01"], base.format(sev="critico"))
+
+
+def test_cada_ajuste_dice_por_que():
+    for id_caso in AJUSTES:
+        assert POR_ID[id_caso]["ajuste_v2"], id_caso
+    assert POR_ID["P01"]["ajuste_v2"] == POR_ID["C09"]["ajuste_v2"]  # hereda el de su caso base

@@ -57,3 +57,29 @@ def test_filtraciones_encuentra_el_dato_y_la_clave_pero_ignora_la_pregunta(tmp_p
     assert r["spans.jsonl"] == {"pii": ["ana.perez@mail.com"], "claves": ["sk-lf-0000aaaa11112222bbbb"]}
     assert r["r.csv"] == {"pii": [], "claves": []}
 
+
+def test_tres_fuentes_compara_cada_par_y_lista_los_desacuerdos():
+    from evaluacion.analizar_t4 import tres_fuentes
+
+    filas = [{**fila("C01", "simple", "True", "aprueba"), "juez_motivo": "bien"},
+             {**fila("C02", "simple", "True", "aprueba"), "juez_motivo": "bien"},
+             {**fila("M01", "ambigua", "", "falla"), "juez_motivo": "no pide aclarar"}]
+    etiquetas = {"C01": {"etiqueta": "falla", "nota": "parcial"}, "C02": {"etiqueta": "aprueba", "nota": ""},
+                 "M01": {"etiqueta": "falla", "nota": ""}}
+    r = tres_fuentes(filas, etiquetas)
+    assert r["juez_vs_humano"]["pares"] == 3 and r["juez_vs_humano"]["acuerdo"] == 0.667
+    assert r["verificador_vs_humano"]["pares"] == 2
+    assert [d["id"] for d in r["desacuerdos"]] == ["C01"]
+    assert r["desacuerdos"][0]["nota_humano"] == "parcial"
+
+
+def test_recalificar_cambia_solo_el_acierto_de_las_respondibles():
+    from evaluacion.analizar_t4 import recalificar
+
+    golden = {"C01": {"patron": r"pedidos\.ts:24"}, "Q01": {"tipo": "negativa"}}
+    filas = [{"id": "C01", "tipo": "simple", "estado": "ok", "acierto": "False", "herramientas_usadas": "",
+              "respuesta": "- [alto] src/pedidos/pedidos.ts:24 — x"},
+             {"id": "Q01", "tipo": "negativa", "estado": "abstencion", "acierto": "True", "herramientas_usadas": "",
+              "respuesta": "No puedo responder con los datos disponibles."}]
+    r = recalificar(filas, golden)
+    assert [(f["acierto_v1"], f["acierto"]) for f in r] == [("False", "True"), ("True", "True")]

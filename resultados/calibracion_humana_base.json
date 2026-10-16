@@ -1,0 +1,14 @@
+{
+  "pares": 24,
+  "acuerdo": 0.75,
+  "kappa": 0.415,
+  "discrepancias": [
+    "C01",
+    "C06",
+    "C08",
+    "C09",
+    "S01",
+    "P01"
+  ],
+  "excluidos_sin_parsear": []
+}

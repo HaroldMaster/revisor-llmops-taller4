@@ -4,6 +4,8 @@
     python -m evaluacion.analizar_t4 agentes resultados/spans_base.jsonl
     python -m evaluacion.analizar_t4 hoja resultados/resultados_base.csv -o resultados/etiquetas_hoja.csv
     python -m evaluacion.analizar_t4 filtraciones resultados/spans_base.jsonl resultados/resultados_base.csv
+    python -m evaluacion.analizar_t4 recalificar resultados/resultados_base.csv -o resultados/resultados_base_v2.csv
+    python -m evaluacion.analizar_t4 tres resultados/resultados_base.csv resultados/etiquetas.csv
 
 - verificador: el juez contra el acierto determinístico, con el mismo acuerdo y kappa de
   evaluar_llmops.py --calibrar. Solo hay par donde los dos opinan: las ambiguas no tienen acierto.
@@ -12,6 +14,8 @@
   fase dura lo que el más lento, no la suma. Sumar spans anidados (un agent y sus llm) cuenta
   dos veces el mismo tiempo, que es lo que hace la columna parte_del_total de resumir_trazas.py.
 - hoja: lo que una persona necesita para etiquetar, sin las columnas del juez.
+- recalificar: el acierto de las mismas respuestas con el golden set actual (v2), y acierto_v1 al lado.
+- tres: persona, juez y verificador, par a par, y los casos en que no coinciden.
 - filtraciones: los textos `pii` del golden set y las claves con forma de clave, en los spans y
   en el CSV. Tiene que dar cero.
 """
@@ -127,6 +131,50 @@ def hoja(filas: list[dict], destino: Path) -> int:
     return len(filas)
 
 
+def recalificar(filas: list[dict], golden: dict[str, dict]) -> list[dict]:
+    """El acierto de cada respondible con otro golden set, sobre las mismas respuestas: cuando lo
+    que cambia es el verificador y no el sistema, no hace falta volver a correr el sistema."""
+    e = evaluador()
+    salida = []
+    for f in filas:
+        nueva = {**f, "acierto_v1": f["acierto"]}
+        if f["tipo"] in e.RESPONDIBLES and f["estado"] != "excepcion":
+            ok = e.acierto_general(golden[f["id"]], f["respuesta"], e.T3.se_abstiene(f["respuesta"]),
+                                   f["herramientas_usadas"].split())
+            nueva["acierto"] = "" if ok is None else str(ok)
+        salida.append(nueva)
+    return salida
+
+
+def _de_verificador(acierto: str) -> str:
+    return {"True": "aprueba", "False": "falla"}.get(acierto, "")
+
+
+def tres_fuentes(filas: list[dict], etiquetas: dict[str, dict]) -> dict:
+    """Persona, juez y verificador sobre los mismos casos: acuerdo de cada par y los casos en
+    que no coinciden, con el motivo del juez y la nota de la persona."""
+    calibrar = evaluador().calibrar
+
+    def par(a: dict[str, str], b: dict[str, str]) -> dict:
+        comunes = [i for i in a if i in b and a[i] and b[i]]
+        filas_b = [{"id": i, "juez_veredicto": b[i]} for i in comunes]
+        r = calibrar(filas_b, {i: a[i] for i in comunes})
+        return {k: r[k] for k in ("pares", "acuerdo", "kappa") if k in r}
+
+    humano = {i: e["etiqueta"] for i, e in etiquetas.items() if e["etiqueta"]}
+    juez = {f["id"]: f["juez_veredicto"] for f in filas if f["juez_veredicto"] in ("aprueba", "falla")}
+    verificador = {f["id"]: _de_verificador(f["acierto"]) for f in filas if _de_verificador(f["acierto"])}
+    casos = []
+    for f in filas:
+        votos = {"humano": humano.get(f["id"], ""), "juez": juez.get(f["id"], ""),
+                 "verificador": verificador.get(f["id"], "")}
+        if len({v for v in votos.values() if v}) > 1:
+            casos.append({"id": f["id"], "tipo": f["tipo"], **votos, "juez_motivo": f["juez_motivo"],
+                          "nota_humano": etiquetas.get(f["id"], {}).get("nota", "")})
+    return {"juez_vs_humano": par(humano, juez), "verificador_vs_humano": par(humano, verificador),
+            "juez_vs_verificador": par(verificador, juez), "desacuerdos": casos}
+
+
 _CLAVE = re.compile(r"\b(?:sk-(?:proj-|lf-)?|pk-lf-)[A-Za-z0-9_-]{16,}")
 
 
@@ -154,6 +202,12 @@ def main() -> None:
     h.add_argument("resultados", type=Path)
     h.add_argument("-o", "--salida", type=Path, default=RAIZ / "resultados/etiquetas_hoja.csv")
     sub.add_parser("filtraciones").add_argument("archivos", type=Path, nargs="+")
+    r = sub.add_parser("recalificar")
+    r.add_argument("resultados", type=Path)
+    r.add_argument("-o", "--salida", type=Path, required=True)
+    t = sub.add_parser("tres")
+    t.add_argument("resultados", type=Path)
+    t.add_argument("etiquetas", type=Path)
     a = ap.parse_args()
     if a.orden == "verificador":
         salida = contra_verificador(leer_csv(a.resultados))
@@ -161,6 +215,18 @@ def main() -> None:
         salida = por_agente(leer_spans(a.spans))
     elif a.orden == "hoja":
         salida = {"filas": hoja(leer_csv(a.resultados), a.salida), "salida": str(a.salida)}
+    elif a.orden == "recalificar":
+        golden = {p["id"]: p for p in json.loads(GOLDEN.read_text(encoding="utf-8"))["preguntas"]}
+        filas = recalificar(leer_csv(a.resultados), golden)
+        with a.salida.open("w", encoding="utf-8", newline="") as archivo:
+            w = csv.DictWriter(archivo, fieldnames=list(filas[0]))
+            w.writeheader()
+            w.writerows(filas)
+        salida = {"cambian": [{"id": f["id"], "v1": f["acierto_v1"], "v2": f["acierto"]} for f in filas
+                              if f["acierto"] != f["acierto_v1"]], "salida": str(a.salida)}
+    elif a.orden == "tres":
+        etiquetas = {e["id"]: e for e in leer_csv(a.etiquetas)}
+        salida = tres_fuentes(leer_csv(a.resultados), etiquetas)
     else:
         salida = filtraciones(a.archivos)
     print(json.dumps(salida, ensure_ascii=False, indent=2))
