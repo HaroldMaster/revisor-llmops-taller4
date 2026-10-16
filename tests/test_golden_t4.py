@@ -96,8 +96,13 @@ def test_la_regla_se_compara_entera_r1_no_es_r12():
 
 
 def test_un_parche_limpio_solo_acierta_sin_hallazgos():
-    assert acierta(POR_ID["N01"], "Sin hallazgos.")
-    assert not acierta(POR_ID["N01"], "- [medio · clean_code] src/carrito/carrito.ts:30 — nombre poco claro")
+    assert acierta(POR_ID["N02"], "Sin hallazgos.")
+    assert not acierta(POR_ID["N02"], "- [medio · clean_code] src/descuentos/descuentos.ts:30 — nombre poco claro")
+
+
+def test_en_la_v3_una_funcion_que_la_app_no_llama_es_codigo_sin_uso_aunque_tenga_tests():
+    assert not acierta(POR_ID["N01"], "Sin hallazgos.")
+    assert acierta(POR_ID["N01"], "- [medio · clean_code · R10] src/carrito/carrito.ts:27 — cantidadTotal no la llama nadie")
 
 
 def test_sin_buscar_reglas_un_caso_con_cita_falla():

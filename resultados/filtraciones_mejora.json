@@ -1,0 +1,17 @@
+{
+  "buscados": [
+    "0991234567",
+    "1712345678",
+    "ana.perez@mail.com"
+  ],
+  "hallado": {
+    "spans_mejora.jsonl": {
+      "pii": [],
+      "claves": []
+    },
+    "resultados_mejora.csv": {
+      "pii": [],
+      "claves": []
+    }
+  }
+}

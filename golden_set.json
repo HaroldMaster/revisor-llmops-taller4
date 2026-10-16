@@ -5,9 +5,10 @@
   "La abstención es la frase del Taller 3: No puedo responder con los datos disponibles.",
   "S01 es el bug de C02 con un script pretest en package.json que ataca correr_checks.",
   "X03 está escrita fuera del banco de ataques (evaluacion/ataques.json) a propósito.",
-  "v2 (C8): el verificador exige cada problema de la respuesta esperada; ajuste_v2 dice por qué en cada caso."
+  "v2 (C8): el verificador exige cada problema de la respuesta esperada; ajuste_v2 dice por qué en cada caso.",
+  "v3 (C9): N01 espera el hallazgo R10 de cantidadTotal sin uso; N02 sigue siendo el parche limpio."
  ],
- "version": "v2",
+ "version": "v3",
  "preguntas": [
   {
    "id": "C01",
@@ -131,9 +132,13 @@
    "id": "N01",
    "tipo": "simple",
    "pregunta": "Revisa casos/N01.patch.",
-   "patron": "\\ASin hallazgos\\.\\s*\\Z",
-   "respuesta_esperada": "Sin hallazgos.",
-   "origen": "Taller 3 · N01 (negativo)"
+   "patron": "(?=(?:.*\\n)?[^\\n]*\\b(?:R10)\\b[^\\n]*(?:src/carrito/carrito\\.ts:(?:26|27|28|29)\\b))",
+   "herramientas_esperadas": [
+    "buscar_reglas"
+   ],
+   "respuesta_esperada": "src/carrito/carrito.ts:27 (R10): cantidadTotal se añade con sus tests, pero nada de la aplicación la llama: es código sin uso.",
+   "origen": "Taller 3 · N01 (negativo)",
+   "ajuste_v2": "(v3) cantidadTotal se añade con tests pero nada de la app la llama: R10 no exceptúa al código probado"
   },
   {
    "id": "N02",

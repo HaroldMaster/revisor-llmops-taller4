@@ -6,6 +6,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 from evaluacion.guion import ModeloDeGuion, pide, responde
 from revisor import observabilidad
+from revisor.agentes.prompts import VERSION
 from revisor.baseline import RevisorUnico
 from revisor.observabilidad import en_hilo, observacion
 from revisor.sistema import Sistema
@@ -78,7 +79,7 @@ def test_la_raiz_lleva_sesion_etiqueta_y_version_de_prompt(spans, embeddings, tm
     raiz = next(s for s in spans() if s.parent is None)
     assert raiz.attributes["session.id"] == "harold-flores-prueba"
     assert tuple(raiz.attributes["langfuse.trace.tags"]) == ("taller-04",)
-    assert raiz.attributes["langfuse.trace.metadata.prompt_version"] == r["prompt_version"] == "v1"
+    assert raiz.attributes["langfuse.trace.metadata.prompt_version"] == r["prompt_version"] == VERSION
 
 
 def test_la_duracion_de_la_raiz_incluye_los_guardrails(spans, embeddings, tmp_path):
@@ -143,3 +144,20 @@ def test_sin_cliente_todo_es_un_no_op(embeddings, tmp_path, monkeypatch):
     monkeypatch.setattr(observabilidad, "_configurado", True)
     r = correr(embeddings, tmp_path)
     assert r["traza_id"] is None and r["status"] == "ok"
+
+
+def test_el_prompt_se_liga_solo_si_su_texto_es_el_que_usa_el_agente(monkeypatch):
+    class Prompt:
+        def __init__(self, texto):
+            self.prompt = texto
+
+    class Cliente:
+        def get_prompt(self, nombre, label, cache_ttl_seconds):
+            assert (nombre, label) == ("revisor-reviewer_bugs", "v9")
+            return Prompt("texto registrado")
+
+    monkeypatch.setattr(observabilidad, "_prompts", {})
+    monkeypatch.setattr(observabilidad, "cliente", lambda: Cliente())
+    assert observabilidad.prompt_ligado("reviewer_bugs", "texto registrado", "v9").prompt == "texto registrado"
+    monkeypatch.setattr(observabilidad, "_prompts", {})
+    assert observabilidad.prompt_ligado("reviewer_bugs", "otro texto", "v9") is None

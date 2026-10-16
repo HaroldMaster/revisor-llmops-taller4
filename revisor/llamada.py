@@ -23,7 +23,7 @@ def mensajes_para_span(mensajes) -> list[dict]:
 
 def invocar(
     llm, mensajes, *, agente: str, modelo: str, traza: Traza, con_reserva: bool = False,
-    llm_reintento=None,
+    llm_reintento=None, prompt=None,
 ):
     """Llama al modelo. Si la respuesta llega vacía o la llamada falla (por ejemplo
     por tiempo), reintenta una vez con `llm_reintento`: repetir la misma llamada a
@@ -33,7 +33,7 @@ def invocar(
     intentos = [llm, llm_reintento or llm]
     for numero, actual in enumerate(intentos):
         with observacion(agente, "generation", model=modelo, input=mensajes_para_span(mensajes),
-                         metadata={"intento": numero + 1}) as generacion:
+                         metadata={"intento": numero + 1}, prompt=prompt) as generacion:
             inicio = time.perf_counter()
             try:
                 respuesta = actual.invoke(mensajes)

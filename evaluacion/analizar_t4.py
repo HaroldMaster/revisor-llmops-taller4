@@ -6,6 +6,7 @@
     python -m evaluacion.analizar_t4 filtraciones resultados/spans_base.jsonl resultados/resultados_base.csv
     python -m evaluacion.analizar_t4 recalificar resultados/resultados_base.csv -o resultados/resultados_base_v2.csv
     python -m evaluacion.analizar_t4 tres resultados/resultados_base.csv resultados/etiquetas.csv
+    python -m evaluacion.analizar_t4 comparar resultados/resultados_base_v3.csv resultados/resultados_mejora.csv
 
 - verificador: el juez contra el acierto determinístico, con el mismo acuerdo y kappa de
   evaluar_llmops.py --calibrar. Solo hay par donde los dos opinan: las ambiguas no tienen acierto.
@@ -16,6 +17,7 @@
 - hoja: lo que una persona necesita para etiquetar, sin las columnas del juez.
 - recalificar: el acierto de las mismas respuestas con el golden set actual (v2), y acierto_v1 al lado.
 - tres: persona, juez y verificador, par a par, y los casos en que no coinciden.
+- comparar: antes y después caso por caso, con lo que la mejora buscaba separado del azar.
 - filtraciones: los textos `pii` del golden set y las claves con forma de clave, en los spans y
   en el CSV. Tiene que dar cero.
 """
@@ -175,6 +177,47 @@ def tres_fuentes(filas: list[dict], etiquetas: dict[str, dict]) -> dict:
             "juez_vs_verificador": par(verificador, juez), "desacuerdos": casos}
 
 
+# Lo que la mejora de la 2.c buscaba, y con qué parte: el resto de los cambios es azar del modelo.
+OBJETIVOS = {"S01": "prompt v2: severidad y seguridad", "A01": "prompt v2: test borrado",
+             "C01": "prompt v2: test roto", "P01": "prompt v2: test que falta",
+             "C09": "adaptador: dos reglas en una línea"}
+
+
+def comparar(antes: list[dict], despues: list[dict], objetivos: dict[str, str] = OBJETIVOS) -> dict:
+    """Caso por caso, el acierto (mismo golden set) y el juez de dos corridas, y si el caso era
+    un objetivo de la mejora. Un cambio fuera de los objetivos es azar del modelo hasta que se
+    demuestre lo contrario: el modelo muestrea y cada caso se corre una vez."""
+    por_id = {f["id"]: f for f in despues}
+    filas = []
+    for a in antes:
+        d = por_id[a["id"]]
+        cambio = a["acierto"] != d["acierto"]
+        filas.append({"id": a["id"], "tipo": a["tipo"], "objetivo": objetivos.get(a["id"], ""),
+                      "acierto_antes": a["acierto"], "acierto_despues": d["acierto"],
+                      "juez_antes": a["juez_veredicto"], "juez_despues": d["juez_veredicto"],
+                      "tokens_antes": a["tokens_entrada"], "tokens_despues": d["tokens_entrada"],
+                      "segundos_antes": a["segundos"], "segundos_despues": d["segundos"],
+                      "cambio": ("mejora" if d["acierto"] == "True" else "empeora") if cambio else ""})
+
+    def cuenta(xs, valor):
+        return sum(f[valor] == "True" for f in xs)
+
+    resp = [f for f in filas if f["acierto_antes"] in ("True", "False") or f["acierto_despues"] in ("True", "False")]
+    buscados = [f for f in filas if f["objetivo"]]
+    otros = [f for f in filas if not f["objetivo"]]
+    return {
+        "aciertos": {"antes": cuenta(resp, "acierto_antes"), "despues": cuenta(resp, "acierto_despues"), "de": len(resp)},
+        "juez_aprueba": {"antes": sum(f["juez_antes"] == "aprueba" for f in filas),
+                         "despues": sum(f["juez_despues"] == "aprueba" for f in filas), "de": len(filas)},
+        "objetivos": {"mejoran": [f["id"] for f in buscados if f["cambio"] == "mejora"],
+                      "siguen_fallando": [f["id"] for f in buscados if f["acierto_despues"] == "False"],
+                      "empeoran": [f["id"] for f in buscados if f["cambio"] == "empeora"]},
+        "fuera_de_objetivo": {"mejoran": [f["id"] for f in otros if f["cambio"] == "mejora"],
+                              "empeoran": [f["id"] for f in otros if f["cambio"] == "empeora"]},
+        "casos": filas,
+    }
+
+
 _CLAVE = re.compile(r"\b(?:sk-(?:proj-|lf-)?|pk-lf-)[A-Za-z0-9_-]{16,}")
 
 
@@ -205,6 +248,9 @@ def main() -> None:
     r = sub.add_parser("recalificar")
     r.add_argument("resultados", type=Path)
     r.add_argument("-o", "--salida", type=Path, required=True)
+    c = sub.add_parser("comparar")
+    c.add_argument("antes", type=Path)
+    c.add_argument("despues", type=Path)
     t = sub.add_parser("tres")
     t.add_argument("resultados", type=Path)
     t.add_argument("etiquetas", type=Path)
@@ -224,6 +270,8 @@ def main() -> None:
             w.writerows(filas)
         salida = {"cambian": [{"id": f["id"], "v1": f["acierto_v1"], "v2": f["acierto"]} for f in filas
                               if f["acierto"] != f["acierto_v1"]], "salida": str(a.salida)}
+    elif a.orden == "comparar":
+        salida = comparar(leer_csv(a.antes), leer_csv(a.despues))
     elif a.orden == "tres":
         etiquetas = {e["id"]: e for e in leer_csv(a.etiquetas)}
         salida = tres_fuentes(leer_csv(a.resultados), etiquetas)

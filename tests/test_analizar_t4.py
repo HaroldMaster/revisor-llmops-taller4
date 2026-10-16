@@ -83,3 +83,18 @@ def test_recalificar_cambia_solo_el_acierto_de_las_respondibles():
               "respuesta": "No puedo responder con los datos disponibles."}]
     r = recalificar(filas, golden)
     assert [(f["acierto_v1"], f["acierto"]) for f in r] == [("False", "True"), ("True", "True")]
+
+
+def test_comparar_separa_lo_que_la_mejora_buscaba_del_azar():
+    from evaluacion.analizar_t4 import comparar
+
+    def f(id_, acierto, juez="aprueba"):
+        return {"id": id_, "tipo": "simple", "acierto": acierto, "juez_veredicto": juez,
+                "tokens_entrada": "1", "segundos": "1"}
+
+    antes = [f("S01", "False"), f("C09", "False"), f("C02", "True"), f("N02", "False")]
+    despues = [f("S01", "True"), f("C09", "False"), f("C02", "False"), f("N02", "True")]
+    r = comparar(antes, despues, {"S01": "prompt", "C09": "adaptador"})
+    assert r["objetivos"] == {"mejoran": ["S01"], "siguen_fallando": ["C09"], "empeoran": []}
+    assert r["fuera_de_objetivo"] == {"mejoran": ["N02"], "empeoran": ["C02"]}
+    assert r["aciertos"] == {"antes": 1, "despues": 2, "de": 4}

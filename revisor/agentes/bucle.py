@@ -21,6 +21,8 @@ from ..contexto import Contexto
 from ..frenos import K_REPETICION, PresupuestoAgotado
 from ..herramientas import crear_herramientas
 from ..llamada import invocar
+from ..observabilidad import prompt_ligado
+from .prompts import VERSION
 
 
 class EstadoAgente(TypedDict):
@@ -47,6 +49,7 @@ def ejecutar_agente(
     llm = contexto.llm_de(rol).bind_tools(list(herramientas.values()))
     llm_reintento = (contexto.llm_reintento_de or contexto.llm_de)(rol).bind_tools(list(herramientas.values()))
     modelo = contexto.modelo_de(rol)
+    prompt = prompt_ligado(nombre, sistema, VERSION)
 
     vistas: Counter = Counter()
 
@@ -59,6 +62,7 @@ def ejecutar_agente(
                 modelo=modelo,
                 traza=contexto.traza,
                 llm_reintento=llm_reintento,
+                prompt=prompt,
             )
         except PresupuestoAgotado as agotado:
             contexto.traza.evento(

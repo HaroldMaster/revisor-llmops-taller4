@@ -42,6 +42,7 @@ MAX_CONTEXTOS = 7500
 _PARCHE = re.compile(r"[\w./-]+\.patch\b")
 _STATUS = {"completed": "ok", "incompleto": "incompleto", "failed": "error"}
 _ORDEN = {"critico": 0, "alto": 1, "medio": 2}
+_REGLA_DEL_REPO = re.compile(r"R\d+")
 
 
 def parches_de(pregunta: str) -> list[Path]:
@@ -54,16 +55,39 @@ def parches_de(pregunta: str) -> list[Path]:
     return encontrados
 
 
+def por_regla(grupo: list[dict]) -> list[list[dict]]:
+    """Los hallazgos de una ubicación, uno por regla del repo citada; los que no citan una regla
+    del repo van con el primero. Cada parte conserva el orden de severidad del grupo."""
+    partes: dict[str, list[dict]] = {}
+    sin_regla = []
+    for h in grupo:
+        cita = h.get("cita_regla") or ""
+        if _REGLA_DEL_REPO.fullmatch(cita):
+            partes.setdefault(cita, []).append(h)
+        else:
+            sin_regla.append(h)
+    if not partes:
+        return [sin_regla]
+    divididas = list(partes.values())
+    divididas[0] = sorted(divididas[0] + sin_regla, key=grupo.index)
+    return sorted(divididas, key=lambda parte: grupo.index(parte[0]))
+
+
 def respuesta_corta(hallazgos: list[dict], status: str, limite: int = MAX_RESPUESTA) -> str:
-    """Una línea por ubicación con hallazgos vigentes, de más a menos grave."""
+    """Una línea por problema con hallazgos vigentes, de más a menos grave.
+
+    Los hallazgos de una misma ubicación se juntan, salvo que citen reglas distintas del repo: R10
+    (código sin uso) y R6 (falta el test) en la misma línea son dos problemas, y juntarlos dejaba
+    solo la explicación del primero (C09 en la medición base)."""
     vigentes = [h for h in hallazgos if h.get("veredicto") != "descartado"]
     if not vigentes:
         return "Sin hallazgos." if status == "ok" else "La revisión se cortó antes de terminar y no dejó hallazgos."
     por_lugar: dict[tuple, list[dict]] = {}
     for h in sorted(vigentes, key=lambda h: (_ORDEN.get(h["severidad"], 9), h["archivo"], h["linea"])):
         por_lugar.setdefault((h["archivo"], h["linea"]), []).append(h)
+    grupos = [((archivo, linea), parte) for (archivo, linea), del_lugar in por_lugar.items() for parte in por_regla(del_lugar)]
     lineas = []
-    for (archivo, linea), grupo in por_lugar.items():
+    for (archivo, linea), grupo in grupos:
         etiquetas = list(dict.fromkeys([h["dimension"] for h in grupo] + [h["cita_regla"] for h in grupo if h.get("cita_regla")]))
         lineas.append(f"- [{grupo[0]['severidad']} · {' · '.join(etiquetas)}] {archivo}:{linea} — {grupo[0]['afirmacion']}")
     texto = "\n".join(lineas)

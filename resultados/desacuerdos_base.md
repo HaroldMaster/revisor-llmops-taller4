@@ -55,3 +55,22 @@ todos hacia la etiqueta de la persona, y ningún `debe_mencionar` del Taller 3 s
 ajustes. Cada ajuste se justifica con una regla del repositorio (`CLAUDE.md`) y no con la etiqueta,
 pero la cifra es optimista. La prueba fuera de la muestra es la corrida de la mejora (2.c), que se
 califica con la v2 sin haberla visto.
+
+## Corrección posterior (C9): un error de criterio de la persona, en N01
+
+Al preparar el prompt v2 apareció una contradicción. La nota de la persona en N01 dice que «método
+sin consumidor» es una falsa alarma, pero su criterio de revisor es que una función que la
+aplicación no llama es código sin uso aunque tenga tests, y R10 («no se duplica ni se deja código
+sin uso») no tiene excepciones. Con esa regla, el hallazgo era correcto, y el «Sin hallazgos» de
+N01, heredado del Taller 3, también estaba mal.
+
+- `etiquetas.csv` **no se modifica**: es lo que la persona etiquetó sin ver al juez, y por eso
+  vale como referencia. Su `falla` en N01 se sostiene por la otra falsa alarma (la variable local
+  con el mismo nombre que el método), aunque la razón cambie.
+- El golden set pasa a **v3**: N01 espera el hallazgo R10 de `cantidadTotal` en
+  `src/carrito/carrito.ts:27` (`ajuste_v2` de N01, marcado «(v3)»).
+- Con la v3 la respuesta de la base en N01 sigue fallando (cita `clean-code-typescript#19` en vez
+  de R10), así que las cifras de calibración no cambian (`calibracion_tres_base_v3.json`).
+
+Es un ejemplo de que la referencia humana también se equivoca, y de cómo se detecta: no
+comparando con el juez, sino contrastando la etiqueta con una regla escrita.

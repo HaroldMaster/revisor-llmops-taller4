@@ -4,7 +4,7 @@ from pathlib import Path
 from evaluacion.guion import ModeloDeGuion, pide, responde
 from revisor.baseline import RevisorUnico
 from revisor.sistema import (
-    ABSTENCION, MAX_CONTEXTOS, MAX_RESPUESTA, Sistema, contextos_de, parches_de, respuesta_corta,
+    ABSTENCION, MAX_CONTEXTOS, MAX_RESPUESTA, Sistema, contextos_de, parches_de, por_regla, respuesta_corta,
 )
 
 HALLAZGO = {
@@ -102,3 +102,17 @@ def test_contextos_unicos_primero_los_citados_y_json_entero():
     assert salida[0].startswith("[R9 ")
     assert len(salida) == len(set(salida))
     assert len(json.dumps(salida, ensure_ascii=False)) <= MAX_CONTEXTOS
+
+
+def _h(id_, regla, severidad="medio", afirmacion=None):
+    return {"id": id_, "dimension": "reglas", "archivo": "src/utils/dinero.ts", "linea": 21, "severidad": severidad,
+            "afirmacion": afirmacion or f"afirmación de {id_}", "evidencia": "", "cita_regla": regla}
+
+
+def test_dos_reglas_del_repo_en_la_misma_linea_son_dos_problemas():
+    texto = respuesta_corta([_h("a", "R10", "alto", "nadie la usa"), _h("b", "R6", afirmacion="no tiene test")], "ok")
+    assert texto.splitlines() == [
+        "- [alto · reglas · R10] src/utils/dinero.ts:21 — nadie la usa",
+        "- [medio · reglas · R6] src/utils/dinero.ts:21 — no tiene test",
+    ]
+

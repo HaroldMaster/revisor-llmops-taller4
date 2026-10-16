@@ -113,6 +113,29 @@ def en_hilo(funcion, *args):
     return contextvars.copy_context().run, funcion, *args
 
 
+_prompts: dict[str, object] = {}
+
+
+def nombre_de_prompt(agente: str) -> str:
+    return f"revisor-{agente}"
+
+
+def prompt_ligado(agente: str, texto: str, version: str):
+    """El prompt de Langfuse con la etiqueta `version` para este agente, si existe y su texto es el
+    que el agente usa de verdad; si no, None y la generation queda sin ligar. Se pide una vez."""
+    lf = cliente()
+    if lf is None:
+        return None
+    clave = f"{agente}@{version}"
+    if clave not in _prompts:
+        try:
+            prompt = lf.get_prompt(nombre_de_prompt(agente), label=version, cache_ttl_seconds=3600)
+            _prompts[clave] = prompt if prompt.prompt == texto else None
+        except Exception:
+            _prompts[clave] = None
+    return _prompts[clave]
+
+
 def flush() -> None:
     if _cliente is not None:
         _cliente.flush()
