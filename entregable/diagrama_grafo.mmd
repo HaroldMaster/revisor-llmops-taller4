@@ -1,0 +1,37 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	preparar(preparar)
+	unir(unir)
+	comprobar(comprobar)
+	verificar(verificar)
+	sintetizar(sintetizar)
+	reviewer_bugs(reviewer_bugs)
+	reviewer_reglas(reviewer_reglas)
+	reviewer_clean_code(reviewer_clean_code)
+	reviewer_eficiencia(reviewer_eficiencia)
+	reviewer_impacto(reviewer_impacto)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> preparar;
+	comprobar -.-> sintetizar;
+	comprobar -.-> verificar;
+	preparar --> reviewer_bugs;
+	preparar --> reviewer_clean_code;
+	preparar --> reviewer_eficiencia;
+	preparar --> reviewer_impacto;
+	preparar --> reviewer_reglas;
+	reviewer_bugs --> unir;
+	reviewer_clean_code --> unir;
+	reviewer_eficiencia --> unir;
+	reviewer_impacto --> unir;
+	reviewer_reglas --> unir;
+	unir --> comprobar;
+	verificar --> sintetizar;
+	sintetizar --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
